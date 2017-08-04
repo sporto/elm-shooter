@@ -24,7 +24,12 @@ type alias Bullet =
 
 type alias Model =
     { coor : ( Float, Float )
-    , currentKey : Maybe Key
+    , pressedKeys :
+        { up : Bool
+        , down : Bool
+        , left : Bool
+        , right : Bool
+        }
     , bullet : Maybe Bullet
     }
 
@@ -56,7 +61,12 @@ type Msg
 initialModel : Model
 initialModel =
     { coor = ( 0, 0 )
-    , currentKey = Nothing
+    , pressedKeys =
+        { up = False
+        , down = False
+        , left = False
+        , right = False
+        }
     , bullet = Nothing
     }
 
@@ -141,59 +151,131 @@ update msg model =
             ( model, Cmd.none )
 
         OnKeyDown keyCode ->
-            let
-                key =
-                    keyCodeToKey keyCode
-            in
-                case key of
-                    Space ->
-                        ( tryShootBullet model, Cmd.none )
+            handleKeyDown model keyCode
 
-                    OtherKey ->
-                        ( { model | currentKey = Nothing }, Cmd.none )
-
-                    _ ->
-                        ( { model | currentKey = Just key }, Cmd.none )
-
-        OnKeyUp _ ->
-            ( { model | currentKey = Nothing }, Cmd.none )
+        OnKeyUp keyCode ->
+            handleKeyUp model keyCode
 
         OnAnimationFrame time ->
-            let
-                ( currentX, currentY ) =
-                    model.coor
-
-                newCoor =
-                    case model.currentKey of
-                        Just Up ->
-                            ( currentX, currentY + movement )
-
-                        Just Down ->
-                            ( currentX, currentY - movement )
-
-                        Just Left ->
-                            ( currentX - movement, currentY )
-
-                        Just Right ->
-                            ( currentX + movement, currentY )
-
-                        _ ->
-                            model.coor
-
-                newBullet =
-                    getNewBulletPosition model.bullet
-            in
-                ( { model | coor = newCoor, bullet = newBullet }, Cmd.none )
+            handleAnimationFrame model time
 
 
-tryShootBullet : Model -> Model
-tryShootBullet model =
-    case model.bullet of
-        Nothing ->
-            { model | bullet = Just model.coor }
+handleKeyDown : Model -> Keyboard.KeyCode -> ( Model, Cmd msg )
+handleKeyDown model keyCode =
+    let
+        key =
+            keyCodeToKey keyCode
 
-        _ ->
-            model
+        currentKeys =
+            model.pressedKeys
+
+        updatedKeys =
+            case key of
+                Up ->
+                    { currentKeys | up = True }
+
+                Down ->
+                    { currentKeys | down = True }
+
+                Left ->
+                    { currentKeys | left = True }
+
+                Right ->
+                    { currentKeys | right = True }
+
+                _ ->
+                    currentKeys
+
+        updatedModel =
+            { model | pressedKeys = updatedKeys }
+    in
+        ( updatedModel, Cmd.none )
+            |> tryShootBullet key
+
+
+handleKeyUp : Model -> Keyboard.KeyCode -> ( Model, Cmd Msg )
+handleKeyUp model keyCode =
+    let
+        key =
+            keyCodeToKey keyCode
+
+        currentKeys =
+            model.pressedKeys
+
+        updatedKeys =
+            case key of
+                Up ->
+                    { currentKeys | up = False }
+
+                Down ->
+                    { currentKeys | down = False }
+
+                Left ->
+                    { currentKeys | left = False }
+
+                Right ->
+                    { currentKeys | right = False }
+
+                _ ->
+                    currentKeys
+
+        updatedModel =
+            { model | pressedKeys = updatedKeys }
+    in
+        ( updatedModel, Cmd.none )
+
+
+tryShootBullet : Key -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+tryShootBullet key ( model, msg ) =
+    if key == Space then
+        case model.bullet of
+            Nothing ->
+                ( { model | bullet = Just model.coor }, msg )
+
+            _ ->
+                ( model, msg )
+    else
+        ( model, msg )
+
+
+handleAnimationFrame : Model -> Time.Time -> ( Model, Cmd msg )
+handleAnimationFrame model time =
+    let
+        plusUp ( x, y ) =
+            if model.pressedKeys.up then
+                ( x, y + movement )
+            else
+                ( x, y )
+
+        plusDown ( x, y ) =
+            if model.pressedKeys.down then
+                ( x, y - movement )
+            else
+                ( x, y )
+
+        plusLeft ( x, y ) =
+            if model.pressedKeys.left then
+                ( x - movement, y )
+            else
+                ( x, y )
+
+        plusRight ( x, y ) =
+            if model.pressedKeys.right then
+                ( x + movement, y )
+            else
+                ( x, y )
+
+        newCoor =
+            model.coor
+                |> plusUp
+                |> plusDown
+                |> plusLeft
+                |> plusRight
+
+        newBullet =
+            getNewBulletPosition model.bullet
+    in
+        ( { model | coor = newCoor, bullet = newBullet }, Cmd.none )
 
 
 getNewBulletPosition bullet =
