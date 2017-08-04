@@ -55,6 +55,40 @@ type Msg
 
 
 
+-- CONSTANTS
+
+
+stageHeight : Float
+stageHeight =
+    400
+
+
+stageWidth : Float
+stageWidth =
+    800
+
+
+topBoundary : Float
+topBoundary =
+    bottomBoundary * -1
+
+
+bottomBoundary : Float
+bottomBoundary =
+    stageHeight / 2
+
+
+leftBoundary : Float
+leftBoundary =
+    rightBoundary * -1
+
+
+rightBoundary : Float
+rightBoundary =
+    stageWidth / 2
+
+
+
 -- INIT
 
 
@@ -85,22 +119,10 @@ subscriptions model =
         ]
 
 
-topBoundary =
-    0
-
-
-bottomBoundary =
-    400
-
-
-rightBoundary =
-    800
-
-
 view : Model -> Html msg
 view model =
-    collage rightBoundary
-        bottomBoundary
+    collage (truncate stageWidth)
+        (truncate stageHeight)
         [ playerView model
         , bulletView model
         ]
@@ -246,6 +268,10 @@ tryShootBullet key ( model, msg ) =
         ( model, msg )
 
 
+
+-- CURRENT FRAME
+
+
 handleAnimationFrame : Model -> Time.Time -> ( Model, Cmd msg )
 handleAnimationFrame model time =
     ( model, Cmd.none )
@@ -280,12 +306,16 @@ handleShipMovement time ( model, msg ) =
             else
                 ( x, y )
 
+        bound ( x, y ) =
+            ( x |> min rightBoundary |> max leftBoundary, y |> min bottomBoundary |> max topBoundary )
+
         newCoor =
             model.coor
                 |> plusUp
                 |> plusDown
                 |> plusLeft
                 |> plusRight
+                |> bound
     in
         ( { model | coor = newCoor }, msg )
 
@@ -309,6 +339,10 @@ getNewBulletPosition bullet =
 
         Nothing ->
             Nothing
+
+
+
+-- MAIN
 
 
 main =
