@@ -85,6 +85,14 @@ subscriptions model =
         ]
 
 
+topBoundary =
+    0
+
+
+bottomBoundary =
+    400
+
+
 rightBoundary =
     800
 
@@ -92,7 +100,7 @@ rightBoundary =
 view : Model -> Html msg
 view model =
     collage rightBoundary
-        400
+        bottomBoundary
         [ playerView model
         , bulletView model
         ]
@@ -240,6 +248,13 @@ tryShootBullet key ( model, msg ) =
 
 handleAnimationFrame : Model -> Time.Time -> ( Model, Cmd msg )
 handleAnimationFrame model time =
+    ( model, Cmd.none )
+        |> handleShipMovement time
+        |> handleBulletMovement time
+
+
+handleShipMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+handleShipMovement time ( model, msg ) =
     let
         plusUp ( x, y ) =
             if model.pressedKeys.up then
@@ -271,11 +286,17 @@ handleAnimationFrame model time =
                 |> plusDown
                 |> plusLeft
                 |> plusRight
+    in
+        ( { model | coor = newCoor }, msg )
 
+
+handleBulletMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+handleBulletMovement time ( model, msg ) =
+    let
         newBullet =
             getNewBulletPosition model.bullet
     in
-        ( { model | coor = newCoor, bullet = newBullet }, Cmd.none )
+        ( { model | bullet = newBullet }, msg )
 
 
 getNewBulletPosition bullet =
