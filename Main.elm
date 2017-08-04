@@ -1,13 +1,14 @@
 module Main exposing (..)
 
-import Debug
-import Html exposing (..)
-import Keyboard
 import AnimationFrame
-import Html.Attributes exposing (width, height, style)
 import Collage exposing (..)
-import Element
 import Color
+import Debug
+import Element
+import Html exposing (..)
+import Html.Attributes exposing (width, height, style)
+import Keyboard
+import Time
 
 
 -- MODELS
@@ -15,6 +16,7 @@ import Color
 
 type alias Model =
     { coor : ( Float, Float )
+    , currentKey : Maybe Key
     }
 
 
@@ -32,7 +34,9 @@ type Key
 
 type Msg
     = NoOp
-    | OnKeyboard Keyboard.KeyCode
+    | OnKeyDown Keyboard.KeyCode
+    | OnKeyUp Keyboard.KeyCode
+    | OnAnimationFrame Time.Time
 
 
 
@@ -42,6 +46,7 @@ type Msg
 initialModel : Model
 initialModel =
     { coor = ( 0, 0 )
+    , currentKey = Nothing
     }
 
 
@@ -52,7 +57,11 @@ init =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Keyboard.downs OnKeyboard
+    Sub.batch
+        [ AnimationFrame.diffs OnAnimationFrame
+        , Keyboard.downs OnKeyDown
+        , Keyboard.ups OnKeyUp
+        ]
 
 
 view : Model -> Html msg
@@ -96,30 +105,45 @@ movement =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case Debug.log "msg" msg of
+    case msg of
         NoOp ->
             ( model, Cmd.none )
 
-        OnKeyboard keyCode ->
+        OnKeyDown keyCode ->
+            let
+                key =
+                    keyCodeToKey keyCode
+            in
+                case key of
+                    OtherKey ->
+                        ( { model | currentKey = Nothing }, Cmd.none )
+
+                    _ ->
+                        ( { model | currentKey = Just key }, Cmd.none )
+
+        OnKeyUp _ ->
+            ( { model | currentKey = Nothing }, Cmd.none )
+
+        OnAnimationFrame time ->
             let
                 ( currentX, currentY ) =
                     model.coor
 
                 newCoor =
-                    case keyCodeToKey keyCode of
-                        Up ->
+                    case model.currentKey of
+                        Just Up ->
                             ( currentX, currentY + movement )
 
-                        Down ->
+                        Just Down ->
                             ( currentX, currentY - movement )
 
-                        Left ->
+                        Just Left ->
                             ( currentX - movement, currentY )
 
-                        Right ->
+                        Just Right ->
                             ( currentX + movement, currentY )
 
-                        OtherKey ->
+                        _ ->
                             model.coor
             in
                 ( { model | coor = newCoor }, Cmd.none )
