@@ -14,8 +14,7 @@ import Color
 
 
 type alias Model =
-    { x : Int
-    , y : Int
+    { coor : ( Float, Float )
     }
 
 
@@ -42,8 +41,7 @@ type Msg
 
 initialModel : Model
 initialModel =
-    { x = 0
-    , y = 0
+    { coor = ( 0, 0 )
     }
 
 
@@ -61,15 +59,16 @@ view : Model -> Html msg
 view model =
     collage 400
         400
-        [ player
+        [ player model
         ]
         |> Element.toHtml
 
 
-player : Form
-player =
+player : Model -> Form
+player model =
     rect 20 20
         |> filled (Color.rgb 0 0 0)
+        |> move model.coor
 
 
 keyCodeToKey : Keyboard.KeyCode -> Key
@@ -91,6 +90,10 @@ keyCodeToKey keyCode =
             OtherKey
 
 
+movement =
+    5
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case Debug.log "msg" msg of
@@ -98,21 +101,28 @@ update msg model =
             ( model, Cmd.none )
 
         OnKeyboard keyCode ->
-            case keyCodeToKey keyCode of
-                Up ->
-                    ( { model | y = model.y - 1 }, Cmd.none )
+            let
+                ( currentX, currentY ) =
+                    model.coor
 
-                Down ->
-                    ( { model | y = model.y + 1 }, Cmd.none )
+                newCoor =
+                    case keyCodeToKey keyCode of
+                        Up ->
+                            ( currentX, currentY + movement )
 
-                Left ->
-                    ( { model | x = model.x - 1 }, Cmd.none )
+                        Down ->
+                            ( currentX, currentY - movement )
 
-                Right ->
-                    ( { model | x = model.x + 1 }, Cmd.none )
+                        Left ->
+                            ( currentX - movement, currentY )
 
-                OtherKey ->
-                    ( model, Cmd.none )
+                        Right ->
+                            ( currentX + movement, currentY )
+
+                        OtherKey ->
+                            model.coor
+            in
+                ( { model | coor = newCoor }, Cmd.none )
 
 
 main =
