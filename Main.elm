@@ -307,7 +307,13 @@ handleShipMovement time ( model, msg ) =
                 ( x, y )
 
         bound ( x, y ) =
-            ( x |> min rightBoundary |> max leftBoundary, y |> min bottomBoundary |> max topBoundary )
+            ( x
+                |> min (rightBoundary - 10)
+                |> max (leftBoundary + 10)
+            , y
+                |> min (bottomBoundary - 10)
+                |> max (topBoundary + 10)
+            )
 
         newCoor =
             model.coor
