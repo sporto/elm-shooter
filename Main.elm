@@ -30,6 +30,7 @@ type alias Model =
         , left : Bool
         , right : Bool
         }
+    , weaponCooldown : Int
     , bullet : Maybe Bullet
     }
 
@@ -101,6 +102,7 @@ initialModel =
         , left = False
         , right = False
         }
+    , weaponCooldown = 0
     , bullet = Nothing
     }
 
@@ -258,12 +260,10 @@ handleKeyUp model keyCode =
 tryShootBullet : Key -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 tryShootBullet key ( model, msg ) =
     if key == Space then
-        case model.bullet of
-            Nothing ->
-                ( { model | bullet = Just model.coor }, msg )
-
-            _ ->
-                ( model, msg )
+        if model.weaponCooldown == 0 then
+            ( { model | bullet = Just model.coor, weaponCooldown = 25 }, msg )
+        else
+            ( model, msg )
     else
         ( model, msg )
 
@@ -276,7 +276,8 @@ handleAnimationFrame : Model -> Time.Time -> ( Model, Cmd msg )
 handleAnimationFrame model time =
     ( model, Cmd.none )
         |> handleShipMovement time
-        |> handleBulletMovement time
+        |> handleBulletsMovement time
+        |> handleWeaponCooldown time
 
 
 handleShipMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
@@ -326,8 +327,8 @@ handleShipMovement time ( model, msg ) =
         ( { model | coor = newCoor }, msg )
 
 
-handleBulletMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
-handleBulletMovement time ( model, msg ) =
+handleBulletsMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+handleBulletsMovement time ( model, msg ) =
     let
         newBullet =
             getNewBulletPosition model.bullet
@@ -345,6 +346,17 @@ getNewBulletPosition bullet =
 
         Nothing ->
             Nothing
+
+
+handleWeaponCooldown : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+handleWeaponCooldown time ( model, msg ) =
+    let
+        weaponCooldown_ =
+            model.weaponCooldown
+                - 1
+                |> max 0
+    in
+        ( { model | weaponCooldown = weaponCooldown_ }, msg )
 
 
 
