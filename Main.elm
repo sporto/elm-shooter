@@ -31,7 +31,7 @@ type alias Model =
         , right : Bool
         }
     , weaponCooldown : Int
-    , bullet : Maybe Bullet
+    , bullets : List Bullet
     }
 
 
@@ -89,6 +89,14 @@ rightBoundary =
     stageWidth / 2
 
 
+movement =
+    5
+
+
+bulletMovement =
+    movement * 3
+
+
 
 -- INIT
 
@@ -103,7 +111,7 @@ initialModel =
         , right = False
         }
     , weaponCooldown = 0
-    , bullet = Nothing
+    , bullets = []
     }
 
 
@@ -123,12 +131,20 @@ subscriptions model =
 
 view : Model -> Html msg
 view model =
+    --let
+    --    _ =
+    --        Debug.log "bullets" model.bullets
+    --in
     collage (truncate stageWidth)
         (truncate stageHeight)
-        [ playerView model
-        , bulletView model
-        ]
+        (drawActors model)
         |> Element.toHtml
+
+
+drawActors : Model -> List Form
+drawActors model =
+    playerView model
+        :: bulletsView model
 
 
 playerView : Model -> Form
@@ -138,16 +154,16 @@ playerView model =
         |> move model.coor
 
 
-bulletView : Model -> Form
-bulletView model =
-    case model.bullet of
-        Just coors ->
-            rect 10 4
-                |> filled (Color.rgb 0 0 0)
-                |> move coors
+bulletView : Bullet -> Form
+bulletView bullet =
+    rect 10 4
+        |> filled (Color.rgb 0 0 0)
+        |> move bullet
 
-        Nothing ->
-            group []
+
+bulletsView : Model -> List Form
+bulletsView model =
+    List.map bulletView model.bullets
 
 
 keyCodeToKey : Keyboard.KeyCode -> Key
@@ -172,10 +188,6 @@ keyCodeToKey keyCode =
             OtherKey
 
 
-movement =
-    5
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -189,7 +201,7 @@ update msg model =
             handleKeyUp model keyCode
 
         OnAnimationFrame time ->
-            handleAnimationFrame model time
+            updateAnimationFrame model time
 
 
 handleKeyDown : Model -> Keyboard.KeyCode -> ( Model, Cmd msg )
@@ -261,7 +273,11 @@ tryShootBullet : Key -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 tryShootBullet key ( model, msg ) =
     if key == Space then
         if model.weaponCooldown == 0 then
-            ( { model | bullet = Just model.coor, weaponCooldown = 25 }, msg )
+            let
+                bullets_ =
+                    model.coor :: model.bullets
+            in
+                ( { model | bullets = bullets_, weaponCooldown = 25 }, msg )
         else
             ( model, msg )
     else
@@ -272,16 +288,16 @@ tryShootBullet key ( model, msg ) =
 -- CURRENT FRAME
 
 
-handleAnimationFrame : Model -> Time.Time -> ( Model, Cmd msg )
-handleAnimationFrame model time =
+updateAnimationFrame : Model -> Time.Time -> ( Model, Cmd msg )
+updateAnimationFrame model time =
     ( model, Cmd.none )
-        |> handleShipMovement time
-        |> handleBulletsMovement time
-        |> handleWeaponCooldown time
+        |> updateShipMovement time
+        |> updateBulletsMovement time
+        |> updateWeaponCooldown time
 
 
-handleShipMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
-handleShipMovement time ( model, msg ) =
+updateShipMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateShipMovement time ( model, msg ) =
     let
         plusUp ( x, y ) =
             if model.pressedKeys.up then
@@ -327,29 +343,22 @@ handleShipMovement time ( model, msg ) =
         ( { model | coor = newCoor }, msg )
 
 
-handleBulletsMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
-handleBulletsMovement time ( model, msg ) =
+updateBulletsMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateBulletsMovement time ( model, msg ) =
     let
-        newBullet =
-            getNewBulletPosition model.bullet
+        moveBullet ( x, y ) =
+            ( x + bulletMovement, y )
+
+        movedBullets =
+            model.bullets
+                |> List.map moveBullet
+                |> List.filter (\( x, y ) -> x < rightBoundary)
     in
-        ( { model | bullet = newBullet }, msg )
+        ( { model | bullets = movedBullets }, msg )
 
 
-getNewBulletPosition bullet =
-    case bullet of
-        Just ( x, y ) ->
-            if x > rightBoundary then
-                Nothing
-            else
-                Just ( x + (movement * 3), y )
-
-        Nothing ->
-            Nothing
-
-
-handleWeaponCooldown : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
-handleWeaponCooldown time ( model, msg ) =
+updateWeaponCooldown : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateWeaponCooldown time ( model, msg ) =
     let
         weaponCooldown_ =
             model.weaponCooldown
