@@ -14,9 +14,18 @@ import Time
 -- MODELS
 
 
+type alias Point =
+    ( Float, Float )
+
+
+type alias Bullet =
+    Point
+
+
 type alias Model =
     { coor : ( Float, Float )
     , currentKey : Maybe Key
+    , bullet : Maybe Bullet
     }
 
 
@@ -25,6 +34,7 @@ type Key
     | Down
     | Left
     | Right
+    | Space
     | OtherKey
 
 
@@ -47,6 +57,7 @@ initialModel : Model
 initialModel =
     { coor = ( 0, 0 )
     , currentKey = Nothing
+    , bullet = Nothing
     }
 
 
@@ -64,20 +75,37 @@ subscriptions model =
         ]
 
 
+rightBoundary =
+    800
+
+
 view : Model -> Html msg
 view model =
-    collage 400
+    collage rightBoundary
         400
-        [ player model
+        [ playerView model
+        , bulletView model
         ]
         |> Element.toHtml
 
 
-player : Model -> Form
-player model =
+playerView : Model -> Form
+playerView model =
     rect 20 20
         |> filled (Color.rgb 0 0 0)
         |> move model.coor
+
+
+bulletView : Model -> Form
+bulletView model =
+    case model.bullet of
+        Just coors ->
+            rect 10 4
+                |> filled (Color.rgb 0 0 0)
+                |> move coors
+
+        Nothing ->
+            group []
 
 
 keyCodeToKey : Keyboard.KeyCode -> Key
@@ -94,6 +122,9 @@ keyCodeToKey keyCode =
 
         39 ->
             Right
+
+        32 ->
+            Space
 
         _ ->
             OtherKey
@@ -115,6 +146,9 @@ update msg model =
                     keyCodeToKey keyCode
             in
                 case key of
+                    Space ->
+                        ( tryShootBullet model, Cmd.none )
+
                     OtherKey ->
                         ( { model | currentKey = Nothing }, Cmd.none )
 
@@ -145,8 +179,33 @@ update msg model =
 
                         _ ->
                             model.coor
+
+                newBullet =
+                    getNewBulletPosition model.bullet
             in
-                ( { model | coor = newCoor }, Cmd.none )
+                ( { model | coor = newCoor, bullet = newBullet }, Cmd.none )
+
+
+tryShootBullet : Model -> Model
+tryShootBullet model =
+    case model.bullet of
+        Nothing ->
+            { model | bullet = Just model.coor }
+
+        _ ->
+            model
+
+
+getNewBulletPosition bullet =
+    case bullet of
+        Just ( x, y ) ->
+            if x > rightBoundary then
+                Nothing
+            else
+                Just ( x + (movement * 3), y )
+
+        Nothing ->
+            Nothing
 
 
 main =
