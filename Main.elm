@@ -256,14 +256,25 @@ drawBgMedium model =
     drawBg model "assets/bg-hills.png" 10
 
 
+shipWidth =
+    20
+
+
+shipHeight =
+    20
+
+
 drawPlayerShip : Model -> Form
 drawPlayerShip model =
     let
         (Ship point) =
             model.playerShip
+
+        file =
+            "assets/ship.png"
     in
-        rect 20 20
-            |> filled (Color.rgb 0 0 0)
+        Element.image shipWidth shipHeight file
+            |> toForm
             |> move point
 
 
@@ -628,16 +639,16 @@ main =
 getShipBoundingBox (Ship ( x, y )) =
     let
         left =
-            x - enemyWidth / 2
+            x - shipWidth / 2
 
         right =
-            x + enemyWidth / 2
+            x + shipWidth / 2
 
         top =
-            y - enemyHeight / 2
+            y - shipHeight / 2
 
         bottom =
-            y + enemyHeight / 2
+            y + shipHeight / 2
     in
         [ ( top, left )
         , ( top, right )
