@@ -30,6 +30,12 @@ type Bullet
     = Bullet Point
 
 
+type alias EnemyBullet =
+    { position : Point
+    , direction : Direction
+    }
+
+
 type Ship
     = Ship Point
 
@@ -59,6 +65,7 @@ newEnemy time =
 
 type alias Model =
     { enemies : List Enemy
+    , enemyBullets : List EnemyBullet
     , explosions : List Explosion
     , friendlyBullets : List Bullet
     , gameOver : Bool
@@ -78,6 +85,7 @@ type alias Model =
 initialModel : Model
 initialModel =
     { enemies = []
+    , enemyBullets = []
     , explosions = []
     , friendlyBullets = []
     , gameOver = False
@@ -178,6 +186,10 @@ weaponCooldownTime =
     0.5 * Time.second
 
 
+enemyWeaponCooldownTime =
+    5 * Time.second
+
+
 shipMovementForDiff diff =
     diff / 2
 
@@ -222,10 +234,17 @@ subscriptions model =
 
 view : Model -> Html msg
 view model =
-    collage (truncate stageWidth)
-        (truncate stageHeight)
-        (drawActors model)
-        |> Element.toHtml
+    let
+        a =
+            1
+
+        --_ =
+        --Debug.log "enemyBullets" model.enemyBullets
+    in
+        collage (truncate stageWidth)
+            (truncate stageHeight)
+            (drawActors model)
+            |> Element.toHtml
 
 
 drawActors : Model -> List Form
@@ -239,6 +258,7 @@ drawActors model =
         , drawPlayerShip model
         , drawEnemies model
         , drawBullets model
+        , drawEnemyBullets model
         , drawExplosions model
 
         -- UI
@@ -404,6 +424,18 @@ drawBullets model =
     List.map drawBullet model.friendlyBullets
 
 
+drawEnemyBullet : EnemyBullet -> Form
+drawEnemyBullet bullet =
+    rect bulletWidth bulletHeight
+        |> filled (Color.rgb 0 0 0)
+        |> move bullet.position
+
+
+drawEnemyBullets : Model -> List Form
+drawEnemyBullets model =
+    List.map drawEnemyBullet model.enemyBullets
+
+
 
 -- UPDATE
 
@@ -520,8 +552,9 @@ updateAnimationFrame model diff =
         |> updateShipCollision diff
         -- Actions
         |> updateShip diff
-        |> updateEnemies diff
-        |> updateBulletsMovement diff
+        |> updateEnemiesMovementAndCooldown diff
+        |> updateEnemiesShots diff
+        |> updateFriendlyBullets diff
         -- Other
         |> updateNewEnemies diff
         |> updateExplotions diff
@@ -605,8 +638,8 @@ updateShip diff ( model, msg ) =
         )
 
 
-updateBulletsMovement : Time -> Return -> Return
-updateBulletsMovement diff ( model, msg ) =
+updateFriendlyBullets : Time -> Return -> Return
+updateFriendlyBullets diff ( model, msg ) =
     let
         movement =
             bulletMovementForDiff diff
@@ -664,8 +697,8 @@ updateEnemyPosition totalTime diff enemy =
         { enemy | position = position_, direction = direction_ }
 
 
-updateEnemies : Time -> Return -> Return
-updateEnemies diff ( model, msg ) =
+updateEnemiesMovementAndCooldown : Time -> Return -> Return
+updateEnemiesMovementAndCooldown diff ( model, msg ) =
     let
         updateWeaponCooldown : Enemy -> Enemy
         updateWeaponCooldown enemy =
@@ -678,6 +711,45 @@ updateEnemies diff ( model, msg ) =
                 |> List.map updateWeaponCooldown
     in
         ( { model | enemies = enemies_ }, msg )
+
+
+updateEnemiesShots : Time -> Return -> Return
+updateEnemiesShots diff ( model, msg ) =
+    let
+        attemptShot : Enemy -> ( Enemy, Maybe EnemyBullet )
+        attemptShot enemy =
+            if enemy.weaponCooldown <= 0 then
+                ( { enemy | weaponCooldown = enemyWeaponCooldownTime }
+                , Just
+                    { position = enemy.position
+                    , direction = enemy.direction
+                    }
+                )
+            else
+                ( enemy, Nothing )
+
+        updates =
+            model.enemies
+                |> List.map attemptShot
+
+        newBullets : List EnemyBullet
+        newBullets =
+            List.filterMap Tuple.second updates
+
+        enemyBullets_ : List EnemyBullet
+        enemyBullets_ =
+            newBullets ++ model.enemyBullets
+
+        enemies_ : List Enemy
+        enemies_ =
+            List.map Tuple.first updates
+    in
+        ( { model
+            | enemyBullets = enemyBullets_
+            , enemies = enemies_
+          }
+        , msg
+        )
 
 
 updateEnemiesCollision : Time -> Return -> Return
