@@ -307,20 +307,47 @@ updateEnemiesCollision diff ( model, msg ) =
 updateShipCollision : Time -> Return Msg -> Return Msg
 updateShipCollision diff ( model, msg ) =
     let
-        collisionWithEnemy =
-            List.any
+        maybeEnemy =
+            List.filter
                 (Utils.doesShipCollideWithEnemy model.playerShip)
                 model.enemies
+                |> List.head
 
-        collisionWithEnemyBullet =
-            List.any
+        maybeBullet =
+            List.filter
                 (Utils.doesShipCollideWithEnemyBullet model.playerShip)
                 model.enemyBullets
+                |> List.head
+
+        -- Remove collided enemies or bullets
+        enemies_ =
+            case maybeEnemy of
+                Just enemy ->
+                    model.enemies
+                        |> List.filter (\e -> e /= enemy)
+
+                Nothing ->
+                    model.enemies
+
+        enemyBullets_ =
+            case maybeBullet of
+                Just bullet ->
+                    model.enemyBullets
+                        |> List.filter (\b -> b /= bullet)
+
+                Nothing ->
+                    model.enemyBullets
 
         anyCollision =
-            collisionWithEnemy || collisionWithEnemyBullet
+            Maybe.Extra.isJust maybeEnemy || Maybe.Extra.isJust maybeBullet
     in
-        ( { model | gameOver = anyCollision }, Cmd.none )
+        ( { model
+            | gameOver = anyCollision
+            , enemies = enemies_
+            , enemyBullets = enemyBullets_
+          }
+        , Cmd.none
+        )
 
 
 updateNewEnemies : Time -> Return Msg -> Return Msg
