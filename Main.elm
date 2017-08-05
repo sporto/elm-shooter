@@ -566,24 +566,40 @@ updateWeaponCooldown diff ( model, msg ) =
         ( { model | weaponCooldown = weaponCooldown_ }, msg )
 
 
+updateEnemyPosition : Time -> Time -> Enemy -> Enemy
+updateEnemyPosition totalTime diff enemy =
+    let
+        _ =
+            Debug.log "newY" newY
+
+        relativeTime =
+            totalTime - enemy.createdTime
+
+        timeVar =
+            relativeTime / 900
+
+        ( x, y ) =
+            enemy.position
+
+        increase =
+            pi * 2 / 100
+
+        newY =
+            (sin timeVar / 2) * (stageHeight * 0.8)
+
+        position_ : Point
+        position_ =
+            ( x - 1 |> max leftBoundary, newY )
+    in
+        { enemy | position = position_ }
+
+
 updateEnemiesMovement : Time -> Return -> Return
 updateEnemiesMovement diff ( model, msg ) =
     let
-        moveEnemy : Enemy -> Enemy
-        moveEnemy enemy =
-            let
-                ( x, y ) =
-                    enemy.position
-
-                position_ : Point
-                position_ =
-                    ( x - 1 |> max leftBoundary, y )
-            in
-                { enemy | position = position_ }
-
         enemies_ : List Enemy
         enemies_ =
-            List.map moveEnemy model.enemies
+            List.map (updateEnemyPosition model.time diff) model.enemies
     in
         ( { model | enemies = enemies_ }, msg )
 
