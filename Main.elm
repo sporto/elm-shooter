@@ -164,7 +164,7 @@ rightBoundary =
 
 
 weaponCooldownTime =
-    150
+    0.5 * Time.second
 
 
 shipMovementForDiff diff =
@@ -211,10 +211,6 @@ subscriptions model =
 
 view : Model -> Html msg
 view model =
-    --let
-    --    _ =
-    --        Debug.log "bullets" model.bullets
-    --in
     collage (truncate stageWidth)
         (truncate stageHeight)
         (drawActors model)
@@ -663,11 +659,33 @@ updateShipCollision diff ( model, msg ) =
 
 updateNewEnemies : Time -> Return -> Return
 updateNewEnemies diff ( model, msg ) =
-    if List.isEmpty model.enemies then
-        -- Spawn
-        ( { model | enemies = [ newEnemy model.time ] }, msg )
-    else
-        ( model, msg )
+    let
+        spawnIfOld enemy =
+            let
+                timeAlive =
+                    model.time - enemy.createdTime
+            in
+                if timeAlive > 5 * Time.second then
+                    True
+                else
+                    False
+
+        shouldSpawn =
+            List.head model.enemies
+                |> Maybe.map spawnIfOld
+                |> Maybe.withDefault True
+
+        enemies_ =
+            if shouldSpawn then
+                newEnemy model.time :: model.enemies
+            else
+                model.enemies
+    in
+        if shouldSpawn then
+            -- Spawn
+            ( { model | enemies = enemies_ }, msg )
+        else
+            ( model, msg )
 
 
 
@@ -687,6 +705,7 @@ main =
 -- UTILS
 
 
+getShipBoundingBox : Ship -> List Point
 getShipBoundingBox (Ship ( x, y )) =
     let
         left =
