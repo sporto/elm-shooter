@@ -16,6 +16,11 @@ import Time exposing (Time)
 -- MODELS
 
 
+type Direction
+    = DirectionLeft
+    | DirectionRight
+
+
 type alias Point =
     ( Float, Float )
 
@@ -31,6 +36,7 @@ type Ship
 type alias Enemy =
     { createdTime : Time
     , position : Point
+    , direction : Direction
     }
 
 
@@ -103,6 +109,7 @@ keyCodeToKey keyCode =
 newEnemy : Time -> Enemy
 newEnemy time =
     { createdTime = time
+    , direction = DirectionLeft
     , position = ( rightBoundary, 0 )
     }
 
@@ -587,11 +594,25 @@ updateEnemyPosition totalTime diff enemy =
         newY =
             (sin timeVar / 2) * (stageHeight * 0.8)
 
+        x_ =
+            if enemy.direction == DirectionLeft then
+                x - 1
+            else
+                x + 1
+
         position_ : Point
         position_ =
-            ( x - 1 |> max leftBoundary, newY )
+            ( x_, newY )
+
+        direction_ =
+            if x_ < leftBoundary then
+                DirectionRight
+            else if x_ > rightBoundary then
+                DirectionLeft
+            else
+                enemy.direction
     in
-        { enemy | position = position_ }
+        { enemy | position = position_, direction = direction_ }
 
 
 updateEnemiesMovement : Time -> Return -> Return
