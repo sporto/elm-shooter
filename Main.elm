@@ -29,7 +29,7 @@ type Ship
 
 
 type Enemy
-    = Enemy Point
+    = Enemy Time Point
 
 
 type alias Model =
@@ -44,7 +44,7 @@ type alias Model =
         , right : Bool
         }
     , score : Int
-    , scrollX : Float
+    , time : Float
     , weaponCooldown : Float
     }
 
@@ -62,7 +62,7 @@ initialModel =
         , right = False
         }
     , score = 0
-    , scrollX = 0
+    , time = 0
     , weaponCooldown = 0
     }
 
@@ -98,9 +98,9 @@ keyCodeToKey keyCode =
             OtherKey
 
 
-newEnemy : Enemy
-newEnemy =
-    Enemy ( rightBoundary, 0 )
+newEnemy : Time -> Enemy
+newEnemy time =
+    Enemy time ( rightBoundary, 0 )
 
 
 type alias Return =
@@ -169,8 +169,8 @@ weaponCooldownForDiff diff =
 
 
 bgMovementForDiff : Float -> Float -> Float
-bgMovementForDiff scrollX distance =
-    scrollX * -1 / distance
+bgMovementForDiff time distance =
+    time * -1 / distance
 
 
 
@@ -237,7 +237,7 @@ drawBg model image distance =
                 |> toForm
 
         x =
-            toFloat (round (bgMovementForDiff model.scrollX distance) % round stageWidth)
+            toFloat (round (bgMovementForDiff model.time distance) % round stageWidth)
     in
         [ bg
             |> moveX x
@@ -320,7 +320,7 @@ enemyHeight =
 
 
 drawEnemy : Enemy -> Form
-drawEnemy (Enemy point) =
+drawEnemy (Enemy _ point) =
     rect enemyWidth enemyHeight
         |> filled (Color.rgb 0 0 0)
         |> move point
@@ -473,9 +473,9 @@ updateStage : Time -> Return -> Return
 updateStage diff ( model, msg ) =
     let
         scrollX_ =
-            model.scrollX + diff
+            model.time + diff
     in
-        ( { model | scrollX = scrollX_ }, msg )
+        ( { model | time = scrollX_ }, msg )
 
 
 updateShipMovement : Time -> Return -> Return
@@ -565,8 +565,8 @@ updateWeaponCooldown diff ( model, msg ) =
 updateEnemiesMovement : Time -> Return -> Return
 updateEnemiesMovement diff ( model, msg ) =
     let
-        moveEnemy (Enemy ( x, y )) =
-            Enemy ( x - 1 |> max leftBoundary, y )
+        moveEnemy (Enemy time ( x, y )) =
+            Enemy time ( x - 1 |> max leftBoundary, y )
 
         enemies_ =
             List.map moveEnemy model.enemies
@@ -614,7 +614,7 @@ updateNewEnemies : Time -> Return -> Return
 updateNewEnemies diff ( model, msg ) =
     if List.isEmpty model.enemies then
         -- Spawn
-        ( { model | enemies = [ newEnemy ] }, msg )
+        ( { model | enemies = [ newEnemy model.time ] }, msg )
     else
         ( model, msg )
 
@@ -657,7 +657,7 @@ getShipBoundingBox (Ship ( x, y )) =
         ]
 
 
-getEnemyBoundingBox (Enemy ( x, y )) =
+getEnemyBoundingBox (Enemy _ ( x, y )) =
     let
         left =
             x - enemyWidth / 2
