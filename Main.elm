@@ -198,6 +198,10 @@ bulletMovementForDiff diff =
     diff
 
 
+enemyBulletMovementForDiff diff =
+    diff / 6
+
+
 weaponCooldownForDiff diff =
     diff
 
@@ -404,6 +408,14 @@ bulletHeight =
     4
 
 
+enemyBulletHeight =
+    4
+
+
+enemyBulletWidth =
+    6
+
+
 explosionWidth =
     20
 
@@ -426,7 +438,7 @@ drawBullets model =
 
 drawEnemyBullet : EnemyBullet -> Form
 drawEnemyBullet bullet =
-    rect bulletWidth bulletHeight
+    rect enemyBulletWidth enemyBulletHeight
         |> filled (Color.rgb 0 0 0)
         |> move bullet.position
 
@@ -555,6 +567,7 @@ updateAnimationFrame model diff =
         |> updateEnemiesMovementAndCooldown diff
         |> updateEnemiesShots diff
         |> updateFriendlyBullets diff
+        |> updateEnemyBullets diff
         -- Other
         |> updateNewEnemies diff
         |> updateExplotions diff
@@ -656,6 +669,46 @@ updateFriendlyBullets diff ( model, msg ) =
                 |> List.filter isBulletInStage
     in
         ( { model | friendlyBullets = movedBullets }, msg )
+
+
+updateEnemyBullets : Time -> Return -> Return
+updateEnemyBullets diff ( model, msg ) =
+    let
+        movement =
+            enemyBulletMovementForDiff diff
+
+        moveBullet : EnemyBullet -> EnemyBullet
+        moveBullet bullet =
+            let
+                ( x, y ) =
+                    bullet.position
+
+                x_ =
+                    if bullet.direction == DirectionLeft then
+                        x - movement
+                    else
+                        x + movement
+
+                position_ =
+                    ( x_, y )
+            in
+                { bullet | position = position_ }
+
+        inStage : EnemyBullet -> Bool
+        inStage { position } =
+            let
+                ( x, y ) =
+                    position
+            in
+                x > leftBoundary && x < rightBoundary
+
+        enemyBullets_ : List EnemyBullet
+        enemyBullets_ =
+            model.enemyBullets
+                |> List.map moveBullet
+                |> List.filter inStage
+    in
+        ( { model | enemyBullets = enemyBullets_ }, msg )
 
 
 updateEnemyPosition : Time -> Time -> Enemy -> Enemy
