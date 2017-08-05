@@ -154,7 +154,7 @@ drawLifes model =
     let
         drawLife : Int -> Form
         drawLife pos =
-            Text.fromString "X"
+            Text.fromString "❤️"
                 |> Collage.text
                 |> move ( leftBoundary + 20 + (toFloat pos * 16), bottomBoundary - 20 )
     in
