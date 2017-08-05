@@ -67,11 +67,11 @@ updateShipMovement model diff (Ship playerShipPoint) =
 
         bound ( x, y ) =
             ( x
-                |> min (rightBoundary - 10)
-                |> max (leftBoundary + 10)
+                |> min (rightBoundary - 16)
+                |> max (leftBoundary + 16)
             , y
-                |> min (bottomBoundary - 10)
-                |> max (topBoundary + 10)
+                |> min (bottomBoundary - 32)
+                |> max (topBoundary + 32)
             )
 
         newCoor =

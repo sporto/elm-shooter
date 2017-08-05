@@ -30,6 +30,7 @@ drawActors model =
         [ -- Background
           drawBgFar model
         , drawBgMedium model
+        , drawBgNear model
 
         -- Ships
         , drawShip model
@@ -60,11 +61,16 @@ drawBg model image distance =
 
         x =
             toFloat (round (bgMovementForDiff model.time distance) % round stageWidth)
+
+        alpha_ =
+            0.7
     in
         [ bg
             |> moveX x
+            |> alpha alpha_
         , bg
             |> moveX (x - stageWidth)
+            |> alpha alpha_
         ]
 
 
@@ -76,6 +82,11 @@ drawBgFar model =
 drawBgMedium : Model -> List Form
 drawBgMedium model =
     drawBg model "assets/bg-hills.png" 10
+
+
+drawBgNear : Model -> List Form
+drawBgNear model =
+    drawBg model "assets/bg-cars.png" 5
 
 
 drawShip : Model -> List Form

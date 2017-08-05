@@ -38,7 +38,7 @@ rightBoundary =
 
 
 weaponCooldownTime =
-    0.5 * Time.second
+    0.3 * Time.second
 
 
 enemyWeaponCooldownTime =
@@ -115,7 +115,7 @@ smallExplosion =
 
 
 respawnTime =
-    3 * Time.second
+    2 * Time.second
 
 
 
