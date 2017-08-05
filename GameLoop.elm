@@ -307,10 +307,18 @@ updateEnemiesCollision diff ( model, msg ) =
 updateShipCollision : Time -> Return Msg -> Return Msg
 updateShipCollision diff ( model, msg ) =
     let
-        anyCollision =
+        collisionWithEnemy =
             List.any
                 (Utils.doesShipCollideWithEnemy model.playerShip)
                 model.enemies
+
+        collisionWithEnemyBullet =
+            List.any
+                (Utils.doesShipCollideWithEnemyBullet model.playerShip)
+                model.enemyBullets
+
+        anyCollision =
+            collisionWithEnemy || collisionWithEnemyBullet
     in
         ( { model | gameOver = anyCollision }, Cmd.none )
 

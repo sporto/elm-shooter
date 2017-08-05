@@ -67,6 +67,31 @@ getEnemyBoundingBox enemy =
         ]
 
 
+getEnemyBulletBoundingBox : EnemyBullet -> List Point
+getEnemyBulletBoundingBox bullet =
+    let
+        ( x, y ) =
+            bullet.position
+
+        left =
+            x - enemyBulletWidth / 2
+
+        right =
+            x + enemyBulletWidth / 2
+
+        top =
+            y - enemyBulletHeight / 2
+
+        bottom =
+            y + enemyBulletHeight / 2
+    in
+        [ ( top, left )
+        , ( top, right )
+        , ( bottom, right )
+        , ( bottom, left )
+        ]
+
+
 getBulletBoundingBox (Bullet ( x, y )) =
     let
         left =
@@ -112,6 +137,23 @@ doesShipCollideWithEnemy ship enemy =
     in
         Collision.collision 2 ( enemyPolly, polySupport ) ( shipPolly, polySupport )
             |> Maybe.withDefault False
+
+
+doesShipCollideWithEnemyBullet : Ship -> EnemyBullet -> Bool
+doesShipCollideWithEnemyBullet ship bullet =
+    let
+        bulletPolly =
+            getEnemyBulletBoundingBox bullet
+
+        shipPolly =
+            getShipBoundingBox ship
+    in
+        Collision.collision 2 ( bulletPolly, polySupport ) ( shipPolly, polySupport )
+            |> Maybe.withDefault False
+
+
+
+---
 
 
 dot : Collision.Pt -> Collision.Pt -> Float
