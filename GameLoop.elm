@@ -366,9 +366,15 @@ updateShipCollision diff ( model, msg ) =
 
         anyCollision =
             Maybe.Extra.isJust maybeEnemy || Maybe.Extra.isJust maybeBullet
+
+        lives_ =
+            if anyCollision then
+                model.lives - 1
+            else
+                model.lives
     in
         ( { model
-            | gameOver = anyCollision
+            | lives = lives_
             , enemies = enemies_
             , enemyBullets = enemyBullets_
           }

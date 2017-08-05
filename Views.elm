@@ -89,7 +89,7 @@ drawPlayerShip model =
             bigExplosion
 
         element =
-            if model.gameOver then
+            if model.lives == 0 then
                 Element.image ew eh eFile
             else
                 Element.image shipWidth shipHeight file
@@ -142,7 +142,7 @@ drawScore model =
                 |> Text.bold
                 |> Text.height 16
                 |> Collage.text
-                |> move ( leftBoundary + 20, bottomBoundary - 20 )
+                |> move ( rightBoundary - 40, bottomBoundary - 20 )
     in
         [ form
         ]
@@ -159,7 +159,7 @@ drawGameOver model =
                 |> Text.color Color.red
                 |> Collage.text
     in
-        if model.gameOver then
+        if model.lives == 0 then
             [ form ]
         else
             []
