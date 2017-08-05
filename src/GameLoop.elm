@@ -1,5 +1,6 @@
 module GameLoop exposing (..)
 
+import Audio
 import List.Extra
 import Maybe.Extra
 import Models exposing (..)
@@ -323,6 +324,12 @@ updateEnemiesCollision diff ( model, cmd ) =
                     (\b ->
                         List.member b bulletsUsed
                     )
+
+        newCmd =
+            if newExplosions == [] then
+                Cmd.none
+            else
+                Audio.playExplosion
     in
         ( { model
             | enemies = enemies_
@@ -330,7 +337,7 @@ updateEnemiesCollision diff ( model, cmd ) =
             , score = model.score + score
             , friendlyBullets = friendlyBullets_
           }
-        , cmd
+        , Cmd.batch [ cmd, newCmd ]
         )
 
 

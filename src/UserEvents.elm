@@ -1,5 +1,6 @@
 module UserEvents exposing (..)
 
+import Audio
 import Keyboard
 import Models exposing (..)
 import Msgs exposing (..)
@@ -82,7 +83,9 @@ tryShootBullet key ( model, msg ) =
                 friendlyBullets_ =
                     (Bullet shipPoint) :: model.friendlyBullets
             in
-                ( { model | friendlyBullets = friendlyBullets_, weaponCooldown = weaponCooldownTime }, msg )
+                ( { model | friendlyBullets = friendlyBullets_, weaponCooldown = weaponCooldownTime }
+                , Audio.playLaser
+                )
         else
             ( model, msg )
     else
