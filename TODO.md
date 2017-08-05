@@ -1,0 +1,4 @@
+- Move enemies in a path
+- Enemies shoot 
+- Nice graphics
+- Background    

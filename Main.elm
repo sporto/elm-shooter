@@ -44,6 +44,7 @@ type alias Model =
     , bullets : List Bullet
     , enemies : List Enemy
     , score : Int
+    , scrollX : Float
     }
 
 
@@ -60,6 +61,7 @@ initialModel =
     , bullets = []
     , enemies = []
     , score = 0
+    , scrollX = 0
     }
 
 
@@ -97,6 +99,10 @@ keyCodeToKey keyCode =
 newEnemy : Enemy
 newEnemy =
     Enemy ( rightBoundary, 0 )
+
+
+type alias Return =
+    ( Model, Cmd Msg )
 
 
 
@@ -160,6 +166,10 @@ weaponCooldownForDiff diff =
     diff
 
 
+bgFarMovementForDiff scrollX =
+    scrollX * -1 / 5
+
+
 
 -- INIT
 
@@ -207,9 +217,25 @@ drawActors model =
 
 drawBg : Model -> List Form
 drawBg model =
-    [ Element.image 800 400 "assets/bg-1.png"
-        |> toForm
-    ]
+    let
+        w =
+            round stageWidth
+
+        h =
+            round stageHeight
+
+        bg1 =
+            Element.image w h "assets/bg-1.png"
+                |> toForm
+
+        x =
+            toFloat (round (bgFarMovementForDiff model.scrollX) % round stageWidth)
+    in
+        [ bg1
+            |> moveX x
+        , bg1
+            |> moveX (x - stageWidth)
+        ]
 
 
 drawPlayerShip : Model -> Form
@@ -297,7 +323,7 @@ update msg model =
             updateAnimationFrame model time
 
 
-handleKeyDown : Model -> Keyboard.KeyCode -> ( Model, Cmd msg )
+handleKeyDown : Model -> Keyboard.KeyCode -> Return
 handleKeyDown model keyCode =
     let
         key =
@@ -362,7 +388,7 @@ handleKeyUp model keyCode =
         ( updatedModel, Cmd.none )
 
 
-tryShootBullet : Key -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+tryShootBullet : Key -> Return -> Return
 tryShootBullet key ( model, msg ) =
     if key == Space then
         if model.weaponCooldown == 0 then
@@ -384,9 +410,10 @@ tryShootBullet key ( model, msg ) =
 -- CURRENT FRAME
 
 
-updateAnimationFrame : Model -> Time -> ( Model, Cmd msg )
+updateAnimationFrame : Model -> Time -> Return
 updateAnimationFrame model diff =
     ( model, Cmd.none )
+        |> updateStage diff
         |> updateShipMovement diff
         |> updateBulletsMovement diff
         |> updateWeaponCooldown diff
@@ -395,7 +422,16 @@ updateAnimationFrame model diff =
         |> updateNewEnemies diff
 
 
-updateShipMovement : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateStage : Time -> Return -> Return
+updateStage diff ( model, msg ) =
+    let
+        scrollX_ =
+            model.scrollX + diff
+    in
+        ( { model | scrollX = scrollX_ }, msg )
+
+
+updateShipMovement : Time -> Return -> Return
 updateShipMovement diff ( model, msg ) =
     let
         (Ship playerShipPoint) =
@@ -448,7 +484,7 @@ updateShipMovement diff ( model, msg ) =
         ( { model | playerShip = Ship newCoor }, msg )
 
 
-updateBulletsMovement : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateBulletsMovement : Time -> Return -> Return
 updateBulletsMovement diff ( model, msg ) =
     let
         movement =
@@ -468,7 +504,7 @@ updateBulletsMovement diff ( model, msg ) =
         ( { model | bullets = movedBullets }, msg )
 
 
-updateWeaponCooldown : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateWeaponCooldown : Time -> Return -> Return
 updateWeaponCooldown diff ( model, msg ) =
     let
         weaponCooldown_ =
@@ -479,7 +515,7 @@ updateWeaponCooldown diff ( model, msg ) =
         ( { model | weaponCooldown = weaponCooldown_ }, msg )
 
 
-updateEnemiesMovement : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateEnemiesMovement : Time -> Return -> Return
 updateEnemiesMovement diff ( model, msg ) =
     let
         moveEnemy (Enemy ( x, y )) =
@@ -491,7 +527,7 @@ updateEnemiesMovement diff ( model, msg ) =
         ( { model | enemies = enemies_ }, msg )
 
 
-updateEnemiesCollision : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateEnemiesCollision : Time -> Return -> Return
 updateEnemiesCollision diff ( model, msg ) =
     let
         checkEnemy enemy =
@@ -515,7 +551,7 @@ updateEnemiesCollision diff ( model, msg ) =
         )
 
 
-updateNewEnemies : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateNewEnemies : Time -> Return -> Return
 updateNewEnemies diff ( model, msg ) =
     if List.isEmpty model.enemies then
         -- Spawn
