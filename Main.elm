@@ -216,16 +216,32 @@ drawEnemies model =
     List.map drawEnemy model.enemies
 
 
+enemyWidth =
+    12
+
+
+enemyHeight =
+    12
+
+
 drawEnemy : Enemy -> Form
 drawEnemy (Enemy point) =
-    rect 12 12
+    rect enemyWidth enemyHeight
         |> filled (Color.rgb 0 0 0)
         |> move point
 
 
+bulletWidth =
+    10
+
+
+bulletHeight =
+    4
+
+
 drawBullet : Bullet -> Form
 drawBullet (Bullet point) =
-    rect 10 4
+    rect bulletWidth bulletHeight
         |> filled (Color.rgb 0 0 0)
         |> move point
 
@@ -490,11 +506,81 @@ main =
 -- UTILS
 
 
+getEnemyBoundingBox (Enemy ( x, y )) =
+    let
+        left =
+            x - enemyWidth / 2
+
+        right =
+            x + enemyWidth / 2
+
+        top =
+            y - enemyHeight / 2
+
+        bottom =
+            y + enemyHeight / 2
+    in
+        [ ( top, left )
+        , ( top, right )
+        , ( bottom, right )
+        , ( bottom, left )
+        ]
+
+
+getBulletBoundingBox (Bullet ( x, y )) =
+    let
+        left =
+            x - bulletWidth / 2
+
+        right =
+            x + bulletWidth / 2
+
+        top =
+            y - bulletHeight / 2
+
+        bottom =
+            y + bulletHeight / 2
+    in
+        [ ( top, left )
+        , ( top, right )
+        , ( bottom, right )
+        , ( bottom, left )
+        ]
+
+
 doesEnemyCollideWithBullet : Enemy -> Bullet -> Bool
 doesEnemyCollideWithBullet enemy bullet =
-    False
+    let
+        enemyPolly =
+            getEnemyBoundingBox enemy
+
+        bulletPolly =
+            getBulletBoundingBox bullet
+    in
+        Collision.collision 2 ( enemyPolly, polySupport ) ( bulletPolly, polySupport )
+            |> Maybe.withDefault False
 
 
+dot : Collision.Pt -> Collision.Pt -> Float
+dot ( x1, y1 ) ( x2, y2 ) =
+    (x1 * x2) + (y1 * y2)
 
---Collision.collision 2 () ()
---    |> Maybe.withDefault False
+
+polySupport : List Collision.Pt -> Collision.Pt -> Maybe Collision.Pt
+polySupport list d =
+    let
+        dotList =
+            List.map (dot d) list
+
+        decorated =
+            (List.map2 (,)) dotList list
+
+        max =
+            List.maximum decorated
+    in
+        case max of
+            Just ( m, p ) ->
+                Just p
+
+            _ ->
+                Nothing
