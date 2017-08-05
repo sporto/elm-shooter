@@ -48,9 +48,9 @@ type alias Enemy =
 
 
 type alias Model =
-    { bullets : List Bullet
-    , enemies : List Enemy
+    { enemies : List Enemy
     , explosions : List Explosion
+    , friendlyBullets : List Bullet
     , gameOver : Bool
     , playerShip : Ship
     , pressedKeys :
@@ -67,9 +67,9 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { bullets = []
-    , enemies = []
+    { enemies = []
     , explosions = []
+    , friendlyBullets = []
     , gameOver = False
     , playerShip = Ship ( 0, 0 )
     , pressedKeys =
@@ -399,7 +399,7 @@ drawBullet (Bullet point) =
 
 drawBullets : Model -> List Form
 drawBullets model =
-    List.map drawBullet model.bullets
+    List.map drawBullet model.friendlyBullets
 
 
 
@@ -495,10 +495,10 @@ tryShootBullet key ( model, msg ) =
                 (Ship shipPoint) =
                     model.playerShip
 
-                bullets_ =
-                    (Bullet shipPoint) :: model.bullets
+                friendlyBullets_ =
+                    (Bullet shipPoint) :: model.friendlyBullets
             in
-                ( { model | bullets = bullets_, weaponCooldown = weaponCooldownTime }, msg )
+                ( { model | friendlyBullets = friendlyBullets_, weaponCooldown = weaponCooldownTime }, msg )
         else
             ( model, msg )
     else
@@ -601,11 +601,11 @@ updateBulletsMovement diff ( model, msg ) =
             x < rightBoundary
 
         movedBullets =
-            model.bullets
+            model.friendlyBullets
                 |> List.map moveBullet
                 |> List.filter isBulletInStage
     in
-        ( { model | bullets = movedBullets }, msg )
+        ( { model | friendlyBullets = movedBullets }, msg )
 
 
 updateWeaponCooldown : Time -> Return -> Return
@@ -673,7 +673,7 @@ updateEnemiesCollision diff ( model, msg ) =
     let
         checkEnemy : Enemy -> ( Maybe Enemy, Maybe Explosion )
         checkEnemy enemy =
-            if List.any (doesEnemyCollideWithBullet enemy) model.bullets then
+            if List.any (doesEnemyCollideWithBullet enemy) model.friendlyBullets then
                 let
                     explosion =
                         { position = enemy.position
@@ -799,8 +799,14 @@ main =
 getDifficulty : Model -> Float
 getDifficulty model =
     let
+        startingDifficulty =
+            0.5
+
+        secondsToIncrease1Level =
+            30 * Time.second
+
         difficulty =
-            0.5 + model.time / (20 * Time.second)
+            model.time / secondsToIncrease1Level + startingDifficulty
     in
         difficulty
 
