@@ -297,6 +297,8 @@ drawScore model =
             model.score
                 |> toString
                 |> Text.fromString
+                |> Text.bold
+                |> Text.height 16
                 |> Collage.text
                 |> move ( leftBoundary + 20, bottomBoundary - 20 )
     in
@@ -579,9 +581,6 @@ updateWeaponCooldown diff ( model, msg ) =
 updateEnemyPosition : Time -> Time -> Enemy -> Enemy
 updateEnemyPosition totalTime diff enemy =
     let
-        _ =
-            Debug.log "newY" newY
-
         relativeTime =
             totalTime - enemy.createdTime
 
@@ -667,12 +666,18 @@ updateShipCollision diff ( model, msg ) =
 updateNewEnemies : Time -> Return -> Return
 updateNewEnemies diff ( model, msg ) =
     let
+        difficulty =
+            getDifficulty model
+
+        timeToNextSpawn =
+            5 * Time.second / difficulty
+
         spawnIfOld enemy =
             let
                 timeAlive =
                     model.time - enemy.createdTime
             in
-                if timeAlive > 5 * Time.second then
+                if timeAlive > timeToNextSpawn then
                     True
                 else
                     False
@@ -710,6 +715,18 @@ main =
 
 
 -- UTILS
+
+
+getDifficulty : Model -> Float
+getDifficulty model =
+    let
+        difficulty =
+            0.5 + model.time / (20 * Time.second)
+
+        _ =
+            Debug.log "difficulty" difficulty
+    in
+        difficulty
 
 
 getShipBoundingBox : Ship -> List Point
