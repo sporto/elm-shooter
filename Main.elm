@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import AnimationFrame
 import Collage exposing (..)
+import Collision
 import Color
 import Debug
 import Element
@@ -18,16 +19,20 @@ type alias Point =
     ( Float, Float )
 
 
-type alias Bullet =
-    Point
+type Bullet
+    = Bullet Point
 
 
-type alias Enemy =
-    Point
+type Ship
+    = Ship Point
+
+
+type Enemy
+    = Enemy Point
 
 
 type alias Model =
-    { playerShip : ( Float, Float )
+    { playerShip : Ship
     , pressedKeys :
         { up : Bool
         , down : Bool
@@ -42,7 +47,7 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { playerShip = ( 0, 0 )
+    { playerShip = Ship ( 0, 0 )
     , pressedKeys =
         { up = False
         , down = False
@@ -88,7 +93,7 @@ keyCodeToKey keyCode =
 
 newEnemy : Enemy
 newEnemy =
-    ( rightBoundary, 0 )
+    Enemy ( rightBoundary, 0 )
 
 
 
@@ -197,9 +202,13 @@ drawActors model =
 
 drawPlayerShip : Model -> Form
 drawPlayerShip model =
-    rect 20 20
-        |> filled (Color.rgb 0 0 0)
-        |> move model.playerShip
+    let
+        (Ship point) =
+            model.playerShip
+    in
+        rect 20 20
+            |> filled (Color.rgb 0 0 0)
+            |> move point
 
 
 drawEnemies : Model -> List Form
@@ -208,17 +217,17 @@ drawEnemies model =
 
 
 drawEnemy : Enemy -> Form
-drawEnemy enemy =
+drawEnemy (Enemy point) =
     rect 12 12
         |> filled (Color.rgb 0 0 0)
-        |> move enemy
+        |> move point
 
 
 drawBullet : Bullet -> Form
-drawBullet bullet =
+drawBullet (Bullet point) =
     rect 10 4
         |> filled (Color.rgb 0 0 0)
-        |> move bullet
+        |> move point
 
 
 drawBullets : Model -> List Form
@@ -316,8 +325,11 @@ tryShootBullet key ( model, msg ) =
     if key == Space then
         if model.weaponCooldown == 0 then
             let
+                (Ship shipPoint) =
+                    model.playerShip
+
                 bullets_ =
-                    model.playerShip :: model.bullets
+                    (Bullet shipPoint) :: model.bullets
             in
                 ( { model | bullets = bullets_, weaponCooldown = weaponCooldownTime }, msg )
         else
@@ -337,12 +349,16 @@ updateAnimationFrame model diff =
         |> updateBulletsMovement diff
         |> updateWeaponCooldown diff
         |> updateEnemiesMovement diff
+        |> updateEnemiesCollision diff
         |> updateNewEnemies diff
 
 
 updateShipMovement : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 updateShipMovement diff ( model, msg ) =
     let
+        (Ship playerShipPoint) =
+            model.playerShip
+
         movement =
             shipMovementForDiff diff
 
@@ -380,14 +396,14 @@ updateShipMovement diff ( model, msg ) =
             )
 
         newCoor =
-            model.playerShip
+            playerShipPoint
                 |> plusUp
                 |> plusDown
                 |> plusLeft
                 |> plusRight
                 |> bound
     in
-        ( { model | playerShip = newCoor }, msg )
+        ( { model | playerShip = Ship newCoor }, msg )
 
 
 updateBulletsMovement : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
@@ -396,13 +412,16 @@ updateBulletsMovement diff ( model, msg ) =
         movement =
             bulletMovementForDiff diff
 
-        moveBullet ( x, y ) =
-            ( x + movement, y )
+        moveBullet (Bullet ( x, y )) =
+            Bullet ( x + movement, y )
+
+        isBulletInStage (Bullet ( x, y )) =
+            x < rightBoundary
 
         movedBullets =
             model.bullets
                 |> List.map moveBullet
-                |> List.filter (\( x, y ) -> x < rightBoundary)
+                |> List.filter isBulletInStage
     in
         ( { model | bullets = movedBullets }, msg )
 
@@ -421,13 +440,28 @@ updateWeaponCooldown diff ( model, msg ) =
 updateEnemiesMovement : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 updateEnemiesMovement diff ( model, msg ) =
     let
-        moveEnemy ( x, y ) =
-            ( x - 1 |> max 0, y )
+        moveEnemy (Enemy ( x, y )) =
+            Enemy ( x - 1 |> max leftBoundary, y )
 
         enemies_ =
             List.map moveEnemy model.enemies
     in
         ( { model | enemies = enemies_ }, msg )
+
+
+updateEnemiesCollision diff ( model, msg ) =
+    let
+        checkEnemy enemy =
+            if List.any (doesEnemyCollideWithBullet enemy) model.bullets then
+                Nothing
+            else
+                Just enemy
+
+        standingEnemies =
+            model.enemies
+                |> List.filterMap checkEnemy
+    in
+        ( { model | enemies = standingEnemies }, msg )
 
 
 updateNewEnemies : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
@@ -450,3 +484,17 @@ main =
         , subscriptions = subscriptions
         , init = init
         }
+
+
+
+-- UTILS
+
+
+doesEnemyCollideWithBullet : Enemy -> Bullet -> Bool
+doesEnemyCollideWithBullet enemy bullet =
+    False
+
+
+
+--Collision.collision 2 () ()
+--    |> Maybe.withDefault False
