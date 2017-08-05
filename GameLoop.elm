@@ -258,45 +258,10 @@ updateEnemiesShots diff ( model, msg ) =
         )
 
 
-type EnemyCollisionResult
-    = EnemyCollisionNoCollision Enemy
-    | EnemyCollisionCollision Enemy Bullet Explosion
-
-
-getEnemyIfNoCollision : EnemyCollisionResult -> Maybe Enemy
-getEnemyIfNoCollision result =
-    case result of
-        EnemyCollisionNoCollision enemy ->
-            Just enemy
-
-        _ ->
-            Nothing
-
-
-getExplosion : EnemyCollisionResult -> Maybe Explosion
-getExplosion result =
-    case result of
-        EnemyCollisionCollision _ _ explosion ->
-            Just explosion
-
-        _ ->
-            Nothing
-
-
-getBullet : EnemyCollisionResult -> Maybe Bullet
-getBullet result =
-    case result of
-        EnemyCollisionCollision _ bullet _ ->
-            Just bullet
-
-        _ ->
-            Nothing
-
-
 updateEnemiesCollision : Time -> Return Msg -> Return Msg
 updateEnemiesCollision diff ( model, msg ) =
     let
-        checkEnemy : Enemy -> EnemyCollisionResult
+        checkEnemy : Enemy -> Maybe ( Enemy, Bullet, Explosion )
         checkEnemy enemy =
             let
                 maybeBullet =
@@ -309,33 +274,41 @@ updateEnemiesCollision diff ( model, msg ) =
             in
                 case maybeBullet of
                     Just bullet ->
-                        EnemyCollisionCollision enemy bullet explosion
+                        Just ( enemy, bullet, explosion )
 
                     Nothing ->
-                        EnemyCollisionNoCollision enemy
+                        Nothing
 
-        collisionResults : List EnemyCollisionResult
+        collisionResults : List ( Enemy, Bullet, Explosion )
         collisionResults =
             model.enemies
-                |> List.map checkEnemy
+                |> List.filterMap checkEnemy
 
-        enemies_ : List Enemy
-        enemies_ =
+        enemiesKilled : List Enemy
+        enemiesKilled =
             collisionResults
-                |> List.filterMap getEnemyIfNoCollision
+                |> List.map (\( e, _, _ ) -> e)
 
         newExplosions : List Explosion
         newExplosions =
             collisionResults
-                |> List.filterMap getExplosion
+                |> List.map (\( _, _, ex ) -> ex)
 
         bulletsUsed : List Bullet
         bulletsUsed =
             collisionResults
-                |> List.filterMap getBullet
+                |> List.map (\( _, b, _ ) -> b)
 
         score =
             List.length newExplosions
+
+        enemies_ : List Enemy
+        enemies_ =
+            model.enemies
+                |> List.Extra.filterNot
+                    (\enemy ->
+                        List.member enemy enemiesKilled
+                    )
 
         explosions_ =
             List.concat [ newExplosions, model.explosions ]
