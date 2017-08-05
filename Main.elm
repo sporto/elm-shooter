@@ -28,8 +28,10 @@ type Ship
     = Ship Point
 
 
-type Enemy
-    = Enemy Time Point
+type alias Enemy =
+    { createdTime : Time
+    , position : Point
+    }
 
 
 type alias Model =
@@ -100,7 +102,9 @@ keyCodeToKey keyCode =
 
 newEnemy : Time -> Enemy
 newEnemy time =
-    Enemy time ( rightBoundary, 0 )
+    { createdTime = time
+    , position = ( rightBoundary, 0 )
+    }
 
 
 type alias Return =
@@ -320,10 +324,10 @@ enemyHeight =
 
 
 drawEnemy : Enemy -> Form
-drawEnemy (Enemy _ point) =
+drawEnemy enemy =
     rect enemyWidth enemyHeight
         |> filled (Color.rgb 0 0 0)
-        |> move point
+        |> move enemy.position
 
 
 bulletWidth =
@@ -565,9 +569,19 @@ updateWeaponCooldown diff ( model, msg ) =
 updateEnemiesMovement : Time -> Return -> Return
 updateEnemiesMovement diff ( model, msg ) =
     let
-        moveEnemy (Enemy time ( x, y )) =
-            Enemy time ( x - 1 |> max leftBoundary, y )
+        moveEnemy : Enemy -> Enemy
+        moveEnemy enemy =
+            let
+                ( x, y ) =
+                    enemy.position
 
+                position_ : Point
+                position_ =
+                    ( x - 1 |> max leftBoundary, y )
+            in
+                { enemy | position = position_ }
+
+        enemies_ : List Enemy
         enemies_ =
             List.map moveEnemy model.enemies
     in
@@ -657,8 +671,12 @@ getShipBoundingBox (Ship ( x, y )) =
         ]
 
 
-getEnemyBoundingBox (Enemy _ ( x, y )) =
+getEnemyBoundingBox : Enemy -> List Point
+getEnemyBoundingBox enemy =
     let
+        ( x, y ) =
+            enemy.position
+
         left =
             x - enemyWidth / 2
 
