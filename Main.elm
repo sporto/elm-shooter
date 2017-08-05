@@ -30,7 +30,7 @@ type alias Model =
         , left : Bool
         , right : Bool
         }
-    , weaponCooldown : Int
+    , weaponCooldown : Float
     , bullets : List Bullet
     }
 
@@ -89,12 +89,27 @@ rightBoundary =
     stageWidth / 2
 
 
-movement =
-    5
+
+--baseMovement =
+--    5
+--bulletMovement =
+--    baseMovement * 3
 
 
-bulletMovement =
-    movement * 3
+weaponCooldownTime =
+    150
+
+
+shipMovementForDiff diff =
+    diff / 2
+
+
+bulletMovementForDiff diff =
+    diff
+
+
+weaponCooldownForDiff diff =
+    diff
 
 
 
@@ -277,7 +292,7 @@ tryShootBullet key ( model, msg ) =
                 bullets_ =
                     model.coor :: model.bullets
             in
-                ( { model | bullets = bullets_, weaponCooldown = 25 }, msg )
+                ( { model | bullets = bullets_, weaponCooldown = weaponCooldownTime }, msg )
         else
             ( model, msg )
     else
@@ -289,16 +304,19 @@ tryShootBullet key ( model, msg ) =
 
 
 updateAnimationFrame : Model -> Time.Time -> ( Model, Cmd msg )
-updateAnimationFrame model time =
+updateAnimationFrame model diff =
     ( model, Cmd.none )
-        |> updateShipMovement time
-        |> updateBulletsMovement time
-        |> updateWeaponCooldown time
+        |> updateShipMovement diff
+        |> updateBulletsMovement diff
+        |> updateWeaponCooldown diff
 
 
 updateShipMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
-updateShipMovement time ( model, msg ) =
+updateShipMovement diff ( model, msg ) =
     let
+        movement =
+            shipMovementForDiff diff
+
         plusUp ( x, y ) =
             if model.pressedKeys.up then
                 ( x, y + movement )
@@ -344,10 +362,13 @@ updateShipMovement time ( model, msg ) =
 
 
 updateBulletsMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
-updateBulletsMovement time ( model, msg ) =
+updateBulletsMovement diff ( model, msg ) =
     let
+        movement =
+            bulletMovementForDiff diff
+
         moveBullet ( x, y ) =
-            ( x + bulletMovement, y )
+            ( x + movement, y )
 
         movedBullets =
             model.bullets
@@ -358,11 +379,11 @@ updateBulletsMovement time ( model, msg ) =
 
 
 updateWeaponCooldown : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
-updateWeaponCooldown time ( model, msg ) =
+updateWeaponCooldown diff ( model, msg ) =
     let
         weaponCooldown_ =
             model.weaponCooldown
-                - 1
+                |> (\current -> current - weaponCooldownForDiff diff)
                 |> max 0
     in
         ( { model | weaponCooldown = weaponCooldown_ }, msg )
