@@ -1,4 +1,4 @@
 
-- Ship trail
-- Squezee ship when going up or down
+
+- Squezee ship when going up or down (Too slow)
 - Sound
