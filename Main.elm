@@ -523,6 +523,7 @@ updateAnimationFrame model diff =
         -- Other
         |> updateWeaponCooldown diff
         |> updateNewEnemies diff
+        |> updateExplotions diff
 
 
 updateStage : Time -> Return -> Return
@@ -760,6 +761,22 @@ updateNewEnemies diff ( model, msg ) =
             ( { model | enemies = enemies_ }, msg )
         else
             ( model, msg )
+
+
+updateExplotions : Time -> Return -> Return
+updateExplotions diff ( model, msg ) =
+    let
+        updateExplotion : Explosion -> Maybe Explosion
+        updateExplotion explosion =
+            if explosion.time > 1 * Time.second then
+                Nothing
+            else
+                Just { explosion | time = explosion.time + diff }
+
+        explosions_ =
+            List.filterMap updateExplotion model.explosions
+    in
+        ( { model | explosions = explosions_ }, msg )
 
 
 
