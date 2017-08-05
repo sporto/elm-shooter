@@ -84,8 +84,17 @@ drawPlayerShip model =
 
         file =
             "assets/ship.png"
+
+        ( eFile, ew, eh ) =
+            bigExplosion
+
+        element =
+            if model.gameOver then
+                Element.image ew eh eFile
+            else
+                Element.image shipWidth shipHeight file
     in
-        Element.image shipWidth shipHeight file
+        element
             |> toForm
             |> move point
             |> List.singleton

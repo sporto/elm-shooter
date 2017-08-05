@@ -106,6 +106,10 @@ explosionHeight =
     20
 
 
+bigExplosion =
+    ( "assets/explosion-big.png", 32, 32 )
+
+
 
 -- MODELS
 
