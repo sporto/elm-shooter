@@ -1,5 +1,6 @@
 module GameLoop exposing (..)
 
+import List.Extra
 import Maybe.Extra
 import Models exposing (..)
 import Msgs exposing (..)
@@ -22,7 +23,7 @@ updateAnimationFrame model diff =
         |> updateEnemyBullets diff
         -- Other
         |> updateNewEnemies diff
-        |> updateExplotions diff
+        |> updateExplosions diff
 
 
 updateStage : Time -> Return Msg -> Return Msg
@@ -257,48 +258,100 @@ updateEnemiesShots diff ( model, msg ) =
         )
 
 
+type EnemyCollisionResult
+    = EnemyCollisionNoCollision Enemy
+    | EnemyCollisionCollision Enemy Bullet Explosion
+
+
+getEnemyIfNoCollision : EnemyCollisionResult -> Maybe Enemy
+getEnemyIfNoCollision result =
+    case result of
+        EnemyCollisionNoCollision enemy ->
+            Just enemy
+
+        _ ->
+            Nothing
+
+
+getExplosion : EnemyCollisionResult -> Maybe Explosion
+getExplosion result =
+    case result of
+        EnemyCollisionCollision _ _ explosion ->
+            Just explosion
+
+        _ ->
+            Nothing
+
+
+getBullet : EnemyCollisionResult -> Maybe Bullet
+getBullet result =
+    case result of
+        EnemyCollisionCollision _ bullet _ ->
+            Just bullet
+
+        _ ->
+            Nothing
+
+
 updateEnemiesCollision : Time -> Return Msg -> Return Msg
 updateEnemiesCollision diff ( model, msg ) =
     let
-        checkEnemy : Enemy -> ( Maybe Enemy, Maybe Explosion )
+        checkEnemy : Enemy -> EnemyCollisionResult
         checkEnemy enemy =
-            if List.any (Utils.doesEnemyCollideWithBullet enemy) model.friendlyBullets then
-                let
-                    explosion =
-                        { position = enemy.position
-                        , time = 0
-                        }
-                in
-                    ( Nothing, Just explosion )
-            else
-                ( Just enemy, Nothing )
+            let
+                maybeBullet =
+                    List.Extra.find (Utils.doesEnemyCollideWithBullet enemy) model.friendlyBullets
 
-        enemiesOrExplosions =
+                explosion =
+                    { position = enemy.position
+                    , time = 0
+                    }
+            in
+                case maybeBullet of
+                    Just bullet ->
+                        EnemyCollisionCollision enemy bullet explosion
+
+                    Nothing ->
+                        EnemyCollisionNoCollision enemy
+
+        collisionResults : List EnemyCollisionResult
+        collisionResults =
             model.enemies
                 |> List.map checkEnemy
 
         enemies_ : List Enemy
         enemies_ =
-            enemiesOrExplosions
-                |> List.map Tuple.first
-                |> Maybe.Extra.values
+            collisionResults
+                |> List.filterMap getEnemyIfNoCollision
 
         newExplosions : List Explosion
         newExplosions =
-            enemiesOrExplosions
-                |> List.map Tuple.second
-                |> Maybe.Extra.values
+            collisionResults
+                |> List.filterMap getExplosion
+
+        bulletsUsed : List Bullet
+        bulletsUsed =
+            collisionResults
+                |> List.filterMap getBullet
 
         score =
             List.length newExplosions
 
         explosions_ =
             List.concat [ newExplosions, model.explosions ]
+
+        friendlyBullets_ =
+            model.friendlyBullets
+                |> List.Extra.filterNot
+                    (\b ->
+                        List.member b bulletsUsed
+                    )
     in
         ( { model
             | enemies = enemies_
             , explosions = explosions_
             , score = model.score + score
+            , friendlyBullets = friendlyBullets_
           }
         , msg
         )
@@ -387,8 +440,8 @@ updateNewEnemies diff ( model, msg ) =
             ( model, msg )
 
 
-updateExplotions : Time -> Return Msg -> Return Msg
-updateExplotions diff ( model, msg ) =
+updateExplosions : Time -> Return Msg -> Return Msg
+updateExplosions diff ( model, msg ) =
     let
         updateExplotion : Explosion -> Maybe Explosion
         updateExplotion explosion =
