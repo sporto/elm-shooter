@@ -166,8 +166,9 @@ weaponCooldownForDiff diff =
     diff
 
 
-bgFarMovementForDiff scrollX =
-    scrollX * -1 / 5
+bgMovementForDiff : Float -> Float -> Float
+bgMovementForDiff scrollX distance =
+    scrollX * -1 / distance
 
 
 
@@ -207,7 +208,8 @@ view model =
 drawActors : Model -> List Form
 drawActors model =
     List.concat
-        [ drawBg model
+        [ drawBgFar model
+        , drawBgMedium model
         , [ drawPlayerShip model ]
         , drawEnemies model
         , drawBullets model
@@ -215,8 +217,8 @@ drawActors model =
         ]
 
 
-drawBg : Model -> List Form
-drawBg model =
+drawBg : Model -> String -> Float -> List Form
+drawBg model image distance =
     let
         w =
             round stageWidth
@@ -224,18 +226,28 @@ drawBg model =
         h =
             round stageHeight
 
-        bg1 =
-            Element.image w h "assets/bg-1.png"
+        bg =
+            Element.image w h image
                 |> toForm
 
         x =
-            toFloat (round (bgFarMovementForDiff model.scrollX) % round stageWidth)
+            toFloat (round (bgMovementForDiff model.scrollX distance) % round stageWidth)
     in
-        [ bg1
+        [ bg
             |> moveX x
-        , bg1
+        , bg
             |> moveX (x - stageWidth)
         ]
+
+
+drawBgFar : Model -> List Form
+drawBgFar model =
+    drawBg model "assets/bg-clouds.png" 40
+
+
+drawBgMedium : Model -> List Form
+drawBgMedium model =
+    drawBg model "assets/bg-hills.png" 10
 
 
 drawPlayerShip : Model -> Form
