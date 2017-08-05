@@ -197,11 +197,19 @@ view model =
 drawActors : Model -> List Form
 drawActors model =
     List.concat
-        [ [ drawPlayerShip model ]
+        [ drawBg model
+        , [ drawPlayerShip model ]
         , drawEnemies model
         , drawBullets model
         , drawScore model
         ]
+
+
+drawBg : Model -> List Form
+drawBg model =
+    [ Element.image 800 400 "assets/bg-1.png"
+        |> toForm
+    ]
 
 
 drawPlayerShip : Model -> Form
