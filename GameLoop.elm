@@ -95,10 +95,14 @@ updateShip diff ( model, msg ) =
             model.weaponCooldown
                 |> (\current -> current - weaponCooldownForDiff diff)
                 |> max 0
+
+        respawnIn_ =
+            max 0 (model.respawnIn - diff)
     in
         ( { model
             | playerShip = ship_
             , weaponCooldown = weaponCooldown_
+            , respawnIn = respawnIn_
           }
         , msg
         )
@@ -367,14 +371,15 @@ updateShipCollision diff ( model, msg ) =
         anyCollision =
             Maybe.Extra.isJust maybeEnemy || Maybe.Extra.isJust maybeBullet
 
-        lifes_ =
+        ( lifes_, respawnIn_ ) =
             if anyCollision then
-                model.lifes - 1
+                ( model.lifes - 1, respawnTime )
             else
-                model.lifes
+                ( model.lifes, model.respawnIn )
     in
         ( { model
             | lifes = lifes_
+            , respawnIn = respawnIn_
             , enemies = enemies_
             , enemyBullets = enemyBullets_
           }

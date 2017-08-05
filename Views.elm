@@ -15,7 +15,7 @@ view model =
             1
 
         --_ =
-        --Debug.log "enemyBullets" model.enemyBullets
+        --    Debug.log "respawnIn" model.respawnIn
     in
         collage (truncate stageWidth)
             (truncate stageHeight)
@@ -31,7 +31,7 @@ drawActors model =
         , drawBgMedium model
 
         -- Ships
-        , drawPlayerShip model
+        , drawShip model
         , drawEnemies model
         , drawBullets model
         , drawEnemyBullets model
@@ -77,8 +77,8 @@ drawBgMedium model =
     drawBg model "assets/bg-hills.png" 10
 
 
-drawPlayerShip : Model -> List Form
-drawPlayerShip model =
+drawShip : Model -> List Form
+drawShip model =
     let
         (Ship point) =
             model.playerShip
@@ -89,9 +89,14 @@ drawPlayerShip model =
         ( eFile, ew, eh ) =
             bigExplosion
 
+        ( e2File, e2w, e2h ) =
+            smallExplosion
+
         element =
             if model.lifes == 0 then
                 Element.image ew eh eFile
+            else if model.respawnIn > 0 then
+                Element.image e2w e2h e2File
             else
                 Element.image shipWidth shipHeight file
     in

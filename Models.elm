@@ -110,6 +110,14 @@ bigExplosion =
     ( "assets/explosion-big.png", 32, 32 )
 
 
+smallExplosion =
+    ( "assets/explosion.png", explosionWidth, explosionHeight )
+
+
+respawnTime =
+    3 * Time.second
+
+
 
 -- MODELS
 
@@ -173,6 +181,7 @@ type alias Model =
         , left : Bool
         , right : Bool
         }
+    , respawnIn : Time
     , score : Int
     , time : Float
     , weaponCooldown : Float
@@ -193,6 +202,7 @@ initialModel =
         , left = False
         , right = False
         }
+    , respawnIn = 0
     , score = 0
     , time = 0
     , weaponCooldown = 0
