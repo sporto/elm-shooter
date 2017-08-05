@@ -66,6 +66,46 @@ bgMovementForDiff time distance =
     time * -1 / distance
 
 
+shipWidth =
+    20
+
+
+shipHeight =
+    20
+
+
+enemyWidth =
+    12
+
+
+enemyHeight =
+    12
+
+
+bulletWidth =
+    10
+
+
+bulletHeight =
+    4
+
+
+enemyBulletHeight =
+    4
+
+
+enemyBulletWidth =
+    6
+
+
+explosionWidth =
+    20
+
+
+explosionHeight =
+    20
+
+
 
 -- MODELS
 
