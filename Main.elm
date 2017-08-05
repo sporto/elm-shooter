@@ -33,35 +33,37 @@ type Enemy
 
 
 type alias Model =
-    { playerShip : Ship
+    { bullets : List Bullet
+    , enemies : List Enemy
+    , gameOver : Bool
+    , playerShip : Ship
     , pressedKeys :
         { up : Bool
         , down : Bool
         , left : Bool
         , right : Bool
         }
-    , weaponCooldown : Float
-    , bullets : List Bullet
-    , enemies : List Enemy
     , score : Int
     , scrollX : Float
+    , weaponCooldown : Float
     }
 
 
 initialModel : Model
 initialModel =
-    { playerShip = Ship ( 0, 0 )
+    { bullets = []
+    , enemies = []
+    , gameOver = False
+    , playerShip = Ship ( 0, 0 )
     , pressedKeys =
         { up = False
         , down = False
         , left = False
         , right = False
         }
-    , weaponCooldown = 0
-    , bullets = []
-    , enemies = []
     , score = 0
     , scrollX = 0
+    , weaponCooldown = 0
     }
 
 
@@ -182,11 +184,14 @@ init =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ AnimationFrame.diffs OnAnimationFrame
-        , Keyboard.downs OnKeyDown
-        , Keyboard.ups OnKeyUp
-        ]
+    if model.gameOver then
+        Sub.none
+    else
+        Sub.batch
+            [ AnimationFrame.diffs OnAnimationFrame
+            , Keyboard.downs OnKeyDown
+            , Keyboard.ups OnKeyUp
+            ]
 
 
 
@@ -426,11 +431,15 @@ updateAnimationFrame : Model -> Time -> Return
 updateAnimationFrame model diff =
     ( model, Cmd.none )
         |> updateStage diff
+        -- Movements
         |> updateShipMovement diff
         |> updateBulletsMovement diff
-        |> updateWeaponCooldown diff
         |> updateEnemiesMovement diff
+        -- Collisions
         |> updateEnemiesCollision diff
+        |> updateShipCollision diff
+        -- Other
+        |> updateWeaponCooldown diff
         |> updateNewEnemies diff
 
 
@@ -542,6 +551,7 @@ updateEnemiesMovement diff ( model, msg ) =
 updateEnemiesCollision : Time -> Return -> Return
 updateEnemiesCollision diff ( model, msg ) =
     let
+        checkEnemy : Enemy -> Maybe Enemy
         checkEnemy enemy =
             if List.any (doesEnemyCollideWithBullet enemy) model.bullets then
                 Nothing
@@ -561,6 +571,17 @@ updateEnemiesCollision diff ( model, msg ) =
           }
         , msg
         )
+
+
+updateShipCollision : Time -> Return -> Return
+updateShipCollision diff ( model, msg ) =
+    let
+        anyCollision =
+            List.any
+                (doesShipCollideWithEnemy model.playerShip)
+                model.enemies
+    in
+        ( { model | gameOver = anyCollision }, Cmd.none )
 
 
 updateNewEnemies : Time -> Return -> Return
@@ -587,6 +608,27 @@ main =
 
 
 -- UTILS
+
+
+getShipBoundingBox (Ship ( x, y )) =
+    let
+        left =
+            x - enemyWidth / 2
+
+        right =
+            x + enemyWidth / 2
+
+        top =
+            y - enemyHeight / 2
+
+        bottom =
+            y + enemyHeight / 2
+    in
+        [ ( top, left )
+        , ( top, right )
+        , ( bottom, right )
+        , ( bottom, left )
+        ]
 
 
 getEnemyBoundingBox (Enemy ( x, y )) =
@@ -641,6 +683,19 @@ doesEnemyCollideWithBullet enemy bullet =
             getBulletBoundingBox bullet
     in
         Collision.collision 2 ( enemyPolly, polySupport ) ( bulletPolly, polySupport )
+            |> Maybe.withDefault False
+
+
+doesShipCollideWithEnemy : Ship -> Enemy -> Bool
+doesShipCollideWithEnemy ship enemy =
+    let
+        enemyPolly =
+            getEnemyBoundingBox enemy
+
+        shipPolly =
+            getShipBoundingBox ship
+    in
+        Collision.collision 2 ( enemyPolly, polySupport ) ( shipPolly, polySupport )
             |> Maybe.withDefault False
 
 
