@@ -152,6 +152,21 @@ doesShipCollideWithEnemyBullet ship bullet =
             |> Maybe.withDefault False
 
 
+canShoot : Model -> Bool
+canShoot =
+    isRespawning >> not
+
+
+isRespawning : Model -> Bool
+isRespawning model =
+    model.respawnIn > 0
+
+
+isInvincible : Model -> Bool
+isInvincible =
+    isRespawning
+
+
 
 ---
 

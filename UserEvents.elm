@@ -3,6 +3,7 @@ module UserEvents exposing (..)
 import Keyboard
 import Models exposing (..)
 import Msgs exposing (..)
+import Utils
 
 
 handleKeyDown : Model -> Keyboard.KeyCode -> Return Msg
@@ -72,7 +73,7 @@ handleKeyUp model keyCode =
 
 tryShootBullet : Key -> Return Msg -> Return Msg
 tryShootBullet key ( model, msg ) =
-    if key == Space then
+    if key == Space && Utils.canShoot model then
         if model.weaponCooldown == 0 then
             let
                 (Ship shipPoint) =

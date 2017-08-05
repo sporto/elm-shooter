@@ -27,12 +27,12 @@ updateAnimationFrame model diff =
 
 
 updateStage : Time -> Return Msg -> Return Msg
-updateStage diff ( model, msg ) =
+updateStage diff ( model, cmd ) =
     let
         scrollX_ =
             model.time + diff
     in
-        ( { model | time = scrollX_ }, msg )
+        ( { model | time = scrollX_ }, cmd )
 
 
 updateShipMovement : Model -> Time -> Ship -> Ship
@@ -86,7 +86,7 @@ updateShipMovement model diff (Ship playerShipPoint) =
 
 
 updateShip : Time -> Return Msg -> Return Msg
-updateShip diff ( model, msg ) =
+updateShip diff ( model, cmd ) =
     let
         ship_ =
             updateShipMovement model diff model.playerShip
@@ -104,12 +104,12 @@ updateShip diff ( model, msg ) =
             , weaponCooldown = weaponCooldown_
             , respawnIn = respawnIn_
           }
-        , msg
+        , cmd
         )
 
 
 updateFriendlyBullets : Time -> Return Msg -> Return Msg
-updateFriendlyBullets diff ( model, msg ) =
+updateFriendlyBullets diff ( model, cmd ) =
     let
         movement =
             bulletMovementForDiff diff
@@ -125,11 +125,11 @@ updateFriendlyBullets diff ( model, msg ) =
                 |> List.map moveBullet
                 |> List.filter isBulletInStage
     in
-        ( { model | friendlyBullets = movedBullets }, msg )
+        ( { model | friendlyBullets = movedBullets }, cmd )
 
 
 updateEnemyBullets : Time -> Return Msg -> Return Msg
-updateEnemyBullets diff ( model, msg ) =
+updateEnemyBullets diff ( model, cmd ) =
     let
         movement =
             enemyBulletMovementForDiff diff
@@ -165,7 +165,7 @@ updateEnemyBullets diff ( model, msg ) =
                 |> List.map moveBullet
                 |> List.filter inStage
     in
-        ( { model | enemyBullets = enemyBullets_ }, msg )
+        ( { model | enemyBullets = enemyBullets_ }, cmd )
 
 
 updateEnemyPosition : Time -> Time -> Enemy -> Enemy
@@ -208,7 +208,7 @@ updateEnemyPosition totalTime diff enemy =
 
 
 updateEnemiesMovementAndCooldown : Time -> Return Msg -> Return Msg
-updateEnemiesMovementAndCooldown diff ( model, msg ) =
+updateEnemiesMovementAndCooldown diff ( model, cmd ) =
     let
         updateWeaponCooldown : Enemy -> Enemy
         updateWeaponCooldown enemy =
@@ -220,11 +220,11 @@ updateEnemiesMovementAndCooldown diff ( model, msg ) =
                 |> List.map (updateEnemyPosition model.time diff)
                 |> List.map updateWeaponCooldown
     in
-        ( { model | enemies = enemies_ }, msg )
+        ( { model | enemies = enemies_ }, cmd )
 
 
 updateEnemiesShots : Time -> Return Msg -> Return Msg
-updateEnemiesShots diff ( model, msg ) =
+updateEnemiesShots diff ( model, cmd ) =
     let
         attemptShot : Enemy -> ( Enemy, Maybe EnemyBullet )
         attemptShot enemy =
@@ -258,12 +258,12 @@ updateEnemiesShots diff ( model, msg ) =
             | enemyBullets = enemyBullets_
             , enemies = enemies_
           }
-        , msg
+        , cmd
         )
 
 
 updateEnemiesCollision : Time -> Return Msg -> Return Msg
-updateEnemiesCollision diff ( model, msg ) =
+updateEnemiesCollision diff ( model, cmd ) =
     let
         checkEnemy : Enemy -> Maybe ( Enemy, Bullet, Explosion )
         checkEnemy enemy =
@@ -330,12 +330,12 @@ updateEnemiesCollision diff ( model, msg ) =
             , score = model.score + score
             , friendlyBullets = friendlyBullets_
           }
-        , msg
+        , cmd
         )
 
 
 updateShipCollision : Time -> Return Msg -> Return Msg
-updateShipCollision diff ( model, msg ) =
+updateShipCollision diff ( model, cmd ) =
     let
         maybeEnemy =
             List.filter
@@ -377,18 +377,21 @@ updateShipCollision diff ( model, msg ) =
             else
                 ( model.lifes, model.respawnIn )
     in
-        ( { model
-            | lifes = lifes_
-            , respawnIn = respawnIn_
-            , enemies = enemies_
-            , enemyBullets = enemyBullets_
-          }
-        , Cmd.none
-        )
+        if Utils.isInvincible model then
+            ( model, cmd )
+        else
+            ( { model
+                | lifes = lifes_
+                , respawnIn = respawnIn_
+                , enemies = enemies_
+                , enemyBullets = enemyBullets_
+              }
+            , cmd
+            )
 
 
 updateNewEnemies : Time -> Return Msg -> Return Msg
-updateNewEnemies diff ( model, msg ) =
+updateNewEnemies diff ( model, cmd ) =
     let
         difficulty =
             Utils.getDifficulty model
@@ -419,13 +422,13 @@ updateNewEnemies diff ( model, msg ) =
     in
         if shouldSpawn then
             -- Spawn
-            ( { model | enemies = enemies_ }, msg )
+            ( { model | enemies = enemies_ }, cmd )
         else
-            ( model, msg )
+            ( model, cmd )
 
 
 updateExplosions : Time -> Return Msg -> Return Msg
-updateExplosions diff ( model, msg ) =
+updateExplosions diff ( model, cmd ) =
     let
         updateExplotion : Explosion -> Maybe Explosion
         updateExplotion explosion =
@@ -437,4 +440,4 @@ updateExplosions diff ( model, msg ) =
         explosions_ =
             List.filterMap updateExplotion model.explosions
     in
-        ( { model | explosions = explosions_ }, msg )
+        ( { model | explosions = explosions_ }, cmd )
