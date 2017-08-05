@@ -9,6 +9,7 @@ import Element
 import Html exposing (..)
 import Html.Attributes exposing (width, height, style)
 import Keyboard
+import Text
 import Time exposing (Time)
 
 
@@ -42,6 +43,7 @@ type alias Model =
     , weaponCooldown : Float
     , bullets : List Bullet
     , enemies : List Enemy
+    , score : Int
     }
 
 
@@ -57,6 +59,7 @@ initialModel =
     , weaponCooldown = 0
     , bullets = []
     , enemies = []
+    , score = 0
     }
 
 
@@ -197,6 +200,7 @@ drawActors model =
         [ [ drawPlayerShip model ]
         , drawEnemies model
         , drawBullets model
+        , drawScore model
         ]
 
 
@@ -214,6 +218,20 @@ drawPlayerShip model =
 drawEnemies : Model -> List Form
 drawEnemies model =
     List.map drawEnemy model.enemies
+
+
+drawScore : Model -> List Form
+drawScore model =
+    let
+        form =
+            model.score
+                |> toString
+                |> Text.fromString
+                |> Collage.text
+                |> move ( leftBoundary + 20, bottomBoundary - 20 )
+    in
+        [ form
+        ]
 
 
 enemyWidth =
@@ -465,6 +483,7 @@ updateEnemiesMovement diff ( model, msg ) =
         ( { model | enemies = enemies_ }, msg )
 
 
+updateEnemiesCollision : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 updateEnemiesCollision diff ( model, msg ) =
     let
         checkEnemy enemy =
@@ -476,8 +495,16 @@ updateEnemiesCollision diff ( model, msg ) =
         standingEnemies =
             model.enemies
                 |> List.filterMap checkEnemy
+
+        score =
+            List.length model.enemies - List.length standingEnemies
     in
-        ( { model | enemies = standingEnemies }, msg )
+        ( { model
+            | enemies = standingEnemies
+            , score = model.score + score
+          }
+        , msg
+        )
 
 
 updateNewEnemies : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
