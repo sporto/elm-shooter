@@ -10,206 +10,10 @@ import Html exposing (..)
 import Html.Attributes exposing (width, height, style)
 import Keyboard
 import Maybe.Extra
+import Models exposing (..)
+import Msgs exposing (..)
 import Text
 import Time exposing (Time)
-
-
--- MODELS
-
-
-type Direction
-    = DirectionLeft
-    | DirectionRight
-
-
-type alias Point =
-    ( Float, Float )
-
-
-type Bullet
-    = Bullet Point
-
-
-type alias EnemyBullet =
-    { position : Point
-    , direction : Direction
-    }
-
-
-type Ship
-    = Ship Point
-
-
-type alias Explosion =
-    { position : Point
-    , time : Time
-    }
-
-
-type alias Enemy =
-    { createdTime : Time
-    , position : Point
-    , direction : Direction
-    , weaponCooldown : Float
-    }
-
-
-newEnemy : Time -> Enemy
-newEnemy time =
-    { createdTime = time
-    , direction = DirectionLeft
-    , position = ( rightBoundary, 0 )
-    , weaponCooldown = 1 * Time.second
-    }
-
-
-type alias Model =
-    { enemies : List Enemy
-    , enemyBullets : List EnemyBullet
-    , explosions : List Explosion
-    , friendlyBullets : List Bullet
-    , gameOver : Bool
-    , playerShip : Ship
-    , pressedKeys :
-        { up : Bool
-        , down : Bool
-        , left : Bool
-        , right : Bool
-        }
-    , score : Int
-    , time : Float
-    , weaponCooldown : Float
-    }
-
-
-initialModel : Model
-initialModel =
-    { enemies = []
-    , enemyBullets = []
-    , explosions = []
-    , friendlyBullets = []
-    , gameOver = False
-    , playerShip = Ship ( 0, 0 )
-    , pressedKeys =
-        { up = False
-        , down = False
-        , left = False
-        , right = False
-        }
-    , score = 0
-    , time = 0
-    , weaponCooldown = 0
-    }
-
-
-type Key
-    = Up
-    | Down
-    | Left
-    | Right
-    | Space
-    | OtherKey
-
-
-keyCodeToKey : Keyboard.KeyCode -> Key
-keyCodeToKey keyCode =
-    case keyCode of
-        38 ->
-            Up
-
-        40 ->
-            Down
-
-        37 ->
-            Left
-
-        39 ->
-            Right
-
-        32 ->
-            Space
-
-        _ ->
-            OtherKey
-
-
-type alias Return =
-    ( Model, Cmd Msg )
-
-
-
--- MSGs
-
-
-type Msg
-    = NoOp
-    | OnKeyDown Keyboard.KeyCode
-    | OnKeyUp Keyboard.KeyCode
-    | OnAnimationFrame Time
-
-
-
--- CONSTANTS
-
-
-stageHeight : Float
-stageHeight =
-    400
-
-
-stageWidth : Float
-stageWidth =
-    1200
-
-
-topBoundary : Float
-topBoundary =
-    bottomBoundary * -1
-
-
-bottomBoundary : Float
-bottomBoundary =
-    stageHeight / 2
-
-
-leftBoundary : Float
-leftBoundary =
-    rightBoundary * -1
-
-
-rightBoundary : Float
-rightBoundary =
-    stageWidth / 2
-
-
-weaponCooldownTime =
-    0.5 * Time.second
-
-
-enemyWeaponCooldownTime =
-    5 * Time.second
-
-
-shipMovementForDiff diff =
-    diff / 2
-
-
-bulletMovementForDiff diff =
-    diff
-
-
-enemyBulletMovementForDiff diff =
-    diff / 6
-
-
-weaponCooldownForDiff diff =
-    diff
-
-
-bgMovementForDiff : Float -> Float -> Float
-bgMovementForDiff time distance =
-    time * -1 / distance
-
 
 
 -- INIT
@@ -468,7 +272,7 @@ update msg model =
             updateAnimationFrame model time
 
 
-handleKeyDown : Model -> Keyboard.KeyCode -> Return
+handleKeyDown : Model -> Keyboard.KeyCode -> Return Msg
 handleKeyDown model keyCode =
     let
         key =
@@ -533,7 +337,7 @@ handleKeyUp model keyCode =
         ( updatedModel, Cmd.none )
 
 
-tryShootBullet : Key -> Return -> Return
+tryShootBullet : Key -> Return Msg -> Return Msg
 tryShootBullet key ( model, msg ) =
     if key == Space then
         if model.weaponCooldown == 0 then
@@ -555,7 +359,7 @@ tryShootBullet key ( model, msg ) =
 -- CURRENT FRAME
 
 
-updateAnimationFrame : Model -> Time -> Return
+updateAnimationFrame : Model -> Time -> Return Msg
 updateAnimationFrame model diff =
     ( model, Cmd.none )
         |> updateStage diff
@@ -573,7 +377,7 @@ updateAnimationFrame model diff =
         |> updateExplotions diff
 
 
-updateStage : Time -> Return -> Return
+updateStage : Time -> Return Msg -> Return Msg
 updateStage diff ( model, msg ) =
     let
         scrollX_ =
@@ -632,7 +436,7 @@ updateShipMovement model diff (Ship playerShipPoint) =
         Ship newCoor
 
 
-updateShip : Time -> Return -> Return
+updateShip : Time -> Return Msg -> Return Msg
 updateShip diff ( model, msg ) =
     let
         ship_ =
@@ -651,7 +455,7 @@ updateShip diff ( model, msg ) =
         )
 
 
-updateFriendlyBullets : Time -> Return -> Return
+updateFriendlyBullets : Time -> Return Msg -> Return Msg
 updateFriendlyBullets diff ( model, msg ) =
     let
         movement =
@@ -671,7 +475,7 @@ updateFriendlyBullets diff ( model, msg ) =
         ( { model | friendlyBullets = movedBullets }, msg )
 
 
-updateEnemyBullets : Time -> Return -> Return
+updateEnemyBullets : Time -> Return Msg -> Return Msg
 updateEnemyBullets diff ( model, msg ) =
     let
         movement =
@@ -750,7 +554,7 @@ updateEnemyPosition totalTime diff enemy =
         { enemy | position = position_, direction = direction_ }
 
 
-updateEnemiesMovementAndCooldown : Time -> Return -> Return
+updateEnemiesMovementAndCooldown : Time -> Return Msg -> Return Msg
 updateEnemiesMovementAndCooldown diff ( model, msg ) =
     let
         updateWeaponCooldown : Enemy -> Enemy
@@ -766,7 +570,7 @@ updateEnemiesMovementAndCooldown diff ( model, msg ) =
         ( { model | enemies = enemies_ }, msg )
 
 
-updateEnemiesShots : Time -> Return -> Return
+updateEnemiesShots : Time -> Return Msg -> Return Msg
 updateEnemiesShots diff ( model, msg ) =
     let
         attemptShot : Enemy -> ( Enemy, Maybe EnemyBullet )
@@ -805,7 +609,7 @@ updateEnemiesShots diff ( model, msg ) =
         )
 
 
-updateEnemiesCollision : Time -> Return -> Return
+updateEnemiesCollision : Time -> Return Msg -> Return Msg
 updateEnemiesCollision diff ( model, msg ) =
     let
         checkEnemy : Enemy -> ( Maybe Enemy, Maybe Explosion )
@@ -852,7 +656,7 @@ updateEnemiesCollision diff ( model, msg ) =
         )
 
 
-updateShipCollision : Time -> Return -> Return
+updateShipCollision : Time -> Return Msg -> Return Msg
 updateShipCollision diff ( model, msg ) =
     let
         anyCollision =
@@ -863,7 +667,7 @@ updateShipCollision diff ( model, msg ) =
         ( { model | gameOver = anyCollision }, Cmd.none )
 
 
-updateNewEnemies : Time -> Return -> Return
+updateNewEnemies : Time -> Return Msg -> Return Msg
 updateNewEnemies diff ( model, msg ) =
     let
         difficulty =
@@ -900,7 +704,7 @@ updateNewEnemies diff ( model, msg ) =
             ( model, msg )
 
 
-updateExplotions : Time -> Return -> Return
+updateExplotions : Time -> Return Msg -> Return Msg
 updateExplotions diff ( model, msg ) =
     let
         updateExplotion : Explosion -> Maybe Explosion
