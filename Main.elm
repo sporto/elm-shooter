@@ -229,11 +229,17 @@ view model =
 drawActors : Model -> List Form
 drawActors model =
     List.concat
-        [ drawBgFar model
+        [ -- Background
+          drawBgFar model
         , drawBgMedium model
-        , [ drawPlayerShip model ]
+
+        -- Ships
+        , drawPlayerShip model
         , drawEnemies model
         , drawBullets model
+        , drawExplosions model
+
+        -- UI
         , drawScore model
         , drawGameOver model
         ]
@@ -280,7 +286,7 @@ shipHeight =
     20
 
 
-drawPlayerShip : Model -> Form
+drawPlayerShip : Model -> List Form
 drawPlayerShip model =
     let
         (Ship point) =
@@ -292,11 +298,39 @@ drawPlayerShip model =
         Element.image shipWidth shipHeight file
             |> toForm
             |> move point
+            |> List.singleton
+
+
+drawEnemy : Enemy -> Form
+drawEnemy enemy =
+    let
+        file =
+            "assets/enemy-1.png"
+    in
+        Element.image enemyWidth enemyHeight file
+            |> toForm
+            |> move enemy.position
 
 
 drawEnemies : Model -> List Form
 drawEnemies model =
     List.map drawEnemy model.enemies
+
+
+drawExplosion : Explosion -> Form
+drawExplosion explosion =
+    let
+        file =
+            "assets/explosion.png"
+    in
+        Element.image explosionWidth explosionHeight file
+            |> toForm
+            |> move explosion.position
+
+
+drawExplosions : Model -> List Form
+drawExplosions model =
+    List.map drawExplosion model.explosions
 
 
 drawScore : Model -> List Form
@@ -340,23 +374,20 @@ enemyHeight =
     12
 
 
-drawEnemy : Enemy -> Form
-drawEnemy enemy =
-    let
-        file =
-            "assets/enemy-1.png"
-    in
-        Element.image enemyWidth enemyHeight file
-            |> toForm
-            |> move enemy.position
-
-
 bulletWidth =
     10
 
 
 bulletHeight =
     4
+
+
+explosionWidth =
+    20
+
+
+explosionHeight =
+    20
 
 
 drawBullet : Bullet -> Form
@@ -662,14 +693,17 @@ updateEnemiesCollision diff ( model, msg ) =
                 |> List.map Tuple.first
                 |> Maybe.Extra.values
 
-        explosions_ : List Explosion
-        explosions_ =
+        newExplosions : List Explosion
+        newExplosions =
             enemiesOrExplosions
                 |> List.map Tuple.second
                 |> Maybe.Extra.values
 
         score =
-            List.length explosions_
+            List.length newExplosions
+
+        explosions_ =
+            List.concat [ newExplosions, model.explosions ]
     in
         ( { model
             | enemies = enemies_
@@ -750,9 +784,6 @@ getDifficulty model =
     let
         difficulty =
             0.5 + model.time / (20 * Time.second)
-
-        _ =
-            Debug.log "difficulty" difficulty
     in
         difficulty
 
