@@ -310,6 +310,9 @@ drawGameOver model =
         form =
             "Game Over"
                 |> Text.fromString
+                |> Text.height 50
+                |> Text.bold
+                |> Text.color Color.red
                 |> Collage.text
     in
         if model.gameOver then
