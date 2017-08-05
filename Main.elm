@@ -8,7 +8,7 @@ import Element
 import Html exposing (..)
 import Html.Attributes exposing (width, height, style)
 import Keyboard
-import Time
+import Time exposing (Time)
 
 
 -- MODELS
@@ -99,7 +99,7 @@ type Msg
     = NoOp
     | OnKeyDown Keyboard.KeyCode
     | OnKeyUp Keyboard.KeyCode
-    | OnAnimationFrame Time.Time
+    | OnAnimationFrame Time
 
 
 
@@ -330,16 +330,17 @@ tryShootBullet key ( model, msg ) =
 -- CURRENT FRAME
 
 
-updateAnimationFrame : Model -> Time.Time -> ( Model, Cmd msg )
+updateAnimationFrame : Model -> Time -> ( Model, Cmd msg )
 updateAnimationFrame model diff =
     ( model, Cmd.none )
         |> updateShipMovement diff
         |> updateBulletsMovement diff
         |> updateWeaponCooldown diff
+        |> updateEnemiesMovement diff
         |> updateNewEnemies diff
 
 
-updateShipMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateShipMovement : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 updateShipMovement diff ( model, msg ) =
     let
         movement =
@@ -389,7 +390,7 @@ updateShipMovement diff ( model, msg ) =
         ( { model | playerShip = newCoor }, msg )
 
 
-updateBulletsMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateBulletsMovement : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 updateBulletsMovement diff ( model, msg ) =
     let
         movement =
@@ -406,7 +407,7 @@ updateBulletsMovement diff ( model, msg ) =
         ( { model | bullets = movedBullets }, msg )
 
 
-updateWeaponCooldown : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateWeaponCooldown : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 updateWeaponCooldown diff ( model, msg ) =
     let
         weaponCooldown_ =
@@ -417,7 +418,19 @@ updateWeaponCooldown diff ( model, msg ) =
         ( { model | weaponCooldown = weaponCooldown_ }, msg )
 
 
-updateNewEnemies : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateEnemiesMovement : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateEnemiesMovement diff ( model, msg ) =
+    let
+        moveEnemy ( x, y ) =
+            ( x - 1 |> max 0, y )
+
+        enemies_ =
+            List.map moveEnemy model.enemies
+    in
+        ( { model | enemies = enemies_ }, msg )
+
+
+updateNewEnemies : Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
 updateNewEnemies diff ( model, msg ) =
     if List.isEmpty model.enemies then
         -- Spawn
