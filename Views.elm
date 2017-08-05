@@ -6,6 +6,7 @@ import Element
 import Html exposing (..)
 import Models exposing (..)
 import Text
+import Time exposing (Time)
 
 
 view : Model -> Html msg
@@ -92,16 +93,26 @@ drawShip model =
         ( e2File, e2w, e2h ) =
             smallExplosion
 
-        element =
+        bigExplosionForm =
+            Element.image ew eh eFile |> toForm
+
+        smallExplosionForm =
+            Element.image e2w e2h e2File |> toForm
+
+        shipForm =
+            Element.image shipWidth shipHeight file |> toForm
+
+        form =
             if model.lifes == 0 then
-                Element.image ew eh eFile
+                bigExplosionForm
+            else if model.respawnIn > (respawnTime - 0.5 * Time.second) then
+                smallExplosionForm
             else if model.respawnIn > 0 then
-                Element.image e2w e2h e2File
+                shipForm |> alpha 0.5
             else
-                Element.image shipWidth shipHeight file
+                shipForm
     in
-        element
-            |> toForm
+        form
             |> move point
             |> List.singleton
 
