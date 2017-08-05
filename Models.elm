@@ -165,7 +165,7 @@ type alias Model =
     , enemyBullets : List EnemyBullet
     , explosions : List Explosion
     , friendlyBullets : List Bullet
-    , lives : Int
+    , lifes : Int
     , playerShip : Ship
     , pressedKeys :
         { up : Bool
@@ -185,7 +185,7 @@ initialModel =
     , enemyBullets = []
     , explosions = []
     , friendlyBullets = []
-    , lives = 3
+    , lifes = 3
     , playerShip = Ship ( 0, 0 )
     , pressedKeys =
         { up = False

@@ -367,14 +367,14 @@ updateShipCollision diff ( model, msg ) =
         anyCollision =
             Maybe.Extra.isJust maybeEnemy || Maybe.Extra.isJust maybeBullet
 
-        lives_ =
+        lifes_ =
             if anyCollision then
-                model.lives - 1
+                model.lifes - 1
             else
-                model.lives
+                model.lifes
     in
         ( { model
-            | lives = lives_
+            | lifes = lifes_
             , enemies = enemies_
             , enemyBullets = enemyBullets_
           }
@@ -393,10 +393,10 @@ updateNewEnemies diff ( model, msg ) =
 
         spawnIfOld enemy =
             let
-                timeAlive =
+                timeAlife =
                     model.time - enemy.createdTime
             in
-                if timeAlive > timeToNextSpawn then
+                if timeAlife > timeToNextSpawn then
                     True
                 else
                     False

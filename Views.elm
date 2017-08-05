@@ -39,6 +39,7 @@ drawActors model =
 
         -- UI
         , drawScore model
+        , drawLifes model
         , drawGameOver model
         ]
 
@@ -89,7 +90,7 @@ drawPlayerShip model =
             bigExplosion
 
         element =
-            if model.lives == 0 then
+            if model.lifes == 0 then
                 Element.image ew eh eFile
             else
                 Element.image shipWidth shipHeight file
@@ -148,6 +149,20 @@ drawScore model =
         ]
 
 
+drawLifes : Model -> List Form
+drawLifes model =
+    let
+        drawLife : Int -> Form
+        drawLife pos =
+            Text.fromString "X"
+                |> Collage.text
+                |> move ( leftBoundary + 20 + (toFloat pos * 16), bottomBoundary - 20 )
+    in
+        model.lifes
+            |> List.range 1
+            |> List.map drawLife
+
+
 drawGameOver : Model -> List Form
 drawGameOver model =
     let
@@ -159,7 +174,7 @@ drawGameOver model =
                 |> Text.color Color.red
                 |> Collage.text
     in
-        if model.lives == 0 then
+        if model.lifes == 0 then
             [ form ]
         else
             []

@@ -23,7 +23,7 @@ init =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.lives == 0 then
+    if model.lifes == 0 then
         Sub.none
     else
         Sub.batch
