@@ -331,9 +331,13 @@ enemyHeight =
 
 drawEnemy : Enemy -> Form
 drawEnemy enemy =
-    rect enemyWidth enemyHeight
-        |> filled (Color.rgb 0 0 0)
-        |> move enemy.position
+    let
+        file =
+            "assets/enemy-1.png"
+    in
+        Element.image enemyWidth enemyHeight file
+            |> toForm
+            |> move enemy.position
 
 
 bulletWidth =
