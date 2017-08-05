@@ -8,6 +8,7 @@ import Html.Attributes exposing (style)
 import Models exposing (..)
 import Text
 import Time exposing (Time)
+import Transform
 
 
 view : Model -> Html msg
@@ -116,6 +117,25 @@ drawShip model =
         shipForm =
             Element.image shipWidth shipHeight file |> toForm
 
+        --movingUpOrDown =
+        --addStrech : Form -> Form
+        --addStrech form =
+        --    if model.pressedKeys.up then
+        --        groupTransform (Transform.scaleY 0.8) [ form ]
+        --    else
+        --        form
+        fire =
+            ngon 3 6
+                |> filled Color.yellow
+                |> move ( -12, 0 )
+                |> rotate (degrees 180)
+
+        addTrail form =
+            if model.pressedKeys.right && not model.pressedKeys.left then
+                group [ form, fire ]
+            else
+                form
+
         form =
             if model.lifes == 0 then
                 bigExplosionForm
@@ -124,7 +144,7 @@ drawShip model =
             else if model.respawnIn > 0 then
                 shipForm |> alpha 0.5
             else
-                shipForm
+                shipForm |> addTrail
     in
         form
             |> move point
