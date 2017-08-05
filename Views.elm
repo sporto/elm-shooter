@@ -199,7 +199,7 @@ drawGameOver model =
 drawBullet : Bullet -> Form
 drawBullet (Bullet point) =
     rect bulletWidth bulletHeight
-        |> filled (Color.rgb 0 0 0)
+        |> filled (Color.rgb 0 150 150)
         |> move point
 
 
@@ -211,7 +211,7 @@ drawBullets model =
 drawEnemyBullet : EnemyBullet -> Form
 drawEnemyBullet bullet =
     rect enemyBulletWidth enemyBulletHeight
-        |> filled (Color.rgb 0 0 0)
+        |> filled (Color.rgb 255 100 0)
         |> move bullet.position
 
 
