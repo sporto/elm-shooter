@@ -378,11 +378,14 @@ updateShipCollision diff ( model, cmd ) =
         anyCollision =
             Maybe.Extra.isJust maybeEnemy || Maybe.Extra.isJust maybeBullet
 
-        ( lifes_, respawnIn_ ) =
+        ( lifes_, respawnIn_, newCmd ) =
             if anyCollision then
-                ( model.lifes - 1, respawnTime )
+                ( model.lifes - 1, respawnTime, Audio.playExplosionBig )
             else
-                ( model.lifes, model.respawnIn )
+                ( model.lifes, model.respawnIn, Cmd.none )
+
+        cmd_ =
+            Cmd.batch [ cmd, newCmd ]
     in
         if Utils.isInvincible model then
             ( model, cmd )
@@ -393,7 +396,7 @@ updateShipCollision diff ( model, cmd ) =
                 , enemies = enemies_
                 , enemyBullets = enemyBullets_
               }
-            , cmd
+            , cmd_
             )
 
 
