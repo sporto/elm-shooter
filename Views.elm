@@ -4,6 +4,7 @@ import Collage exposing (..)
 import Color
 import Element
 import Html exposing (..)
+import Html.Attributes exposing (style)
 import Models exposing (..)
 import Text
 import Time exposing (Time)
@@ -18,10 +19,12 @@ view model =
         --_ =
         --    Debug.log "respawnIn" model.respawnIn
     in
-        collage (truncate stageWidth)
-            (truncate stageHeight)
-            (drawActors model)
-            |> Element.toHtml
+        div [ style [ ( "margin", "0 auto" ), ( "width", "1200px" ) ] ]
+            [ collage (truncate stageWidth)
+                (truncate stageHeight)
+                (drawActors model)
+                |> Element.toHtml
+            ]
 
 
 drawActors : Model -> List Form
