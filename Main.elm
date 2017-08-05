@@ -22,8 +22,12 @@ type alias Bullet =
     Point
 
 
+type alias Enemy =
+    Point
+
+
 type alias Model =
-    { coor : ( Float, Float )
+    { playerShip : ( Float, Float )
     , pressedKeys :
         { up : Bool
         , down : Bool
@@ -32,6 +36,22 @@ type alias Model =
         }
     , weaponCooldown : Float
     , bullets : List Bullet
+    , enemies : List Enemy
+    }
+
+
+initialModel : Model
+initialModel =
+    { playerShip = ( 0, 0 )
+    , pressedKeys =
+        { up = False
+        , down = False
+        , left = False
+        , right = False
+        }
+    , weaponCooldown = 0
+    , bullets = []
+    , enemies = []
     }
 
 
@@ -42,6 +62,33 @@ type Key
     | Right
     | Space
     | OtherKey
+
+
+keyCodeToKey : Keyboard.KeyCode -> Key
+keyCodeToKey keyCode =
+    case keyCode of
+        38 ->
+            Up
+
+        40 ->
+            Down
+
+        37 ->
+            Left
+
+        39 ->
+            Right
+
+        32 ->
+            Space
+
+        _ ->
+            OtherKey
+
+
+newEnemy : Enemy
+newEnemy =
+    ( rightBoundary, 0 )
 
 
 
@@ -66,7 +113,7 @@ stageHeight =
 
 stageWidth : Float
 stageWidth =
-    800
+    1200
 
 
 topBoundary : Float
@@ -89,13 +136,6 @@ rightBoundary =
     stageWidth / 2
 
 
-
---baseMovement =
---    5
---bulletMovement =
---    baseMovement * 3
-
-
 weaponCooldownTime =
     150
 
@@ -116,20 +156,6 @@ weaponCooldownForDiff diff =
 -- INIT
 
 
-initialModel : Model
-initialModel =
-    { coor = ( 0, 0 )
-    , pressedKeys =
-        { up = False
-        , down = False
-        , left = False
-        , right = False
-        }
-    , weaponCooldown = 0
-    , bullets = []
-    }
-
-
 init : ( Model, Cmd Msg )
 init =
     ( initialModel, Cmd.none )
@@ -142,6 +168,10 @@ subscriptions model =
         , Keyboard.downs OnKeyDown
         , Keyboard.ups OnKeyUp
         ]
+
+
+
+-- VIEWS
 
 
 view : Model -> Html msg
@@ -158,49 +188,46 @@ view model =
 
 drawActors : Model -> List Form
 drawActors model =
-    playerView model
-        :: bulletsView model
+    List.concat
+        [ [ drawPlayerShip model ]
+        , drawEnemies model
+        , drawBullets model
+        ]
 
 
-playerView : Model -> Form
-playerView model =
+drawPlayerShip : Model -> Form
+drawPlayerShip model =
     rect 20 20
         |> filled (Color.rgb 0 0 0)
-        |> move model.coor
+        |> move model.playerShip
 
 
-bulletView : Bullet -> Form
-bulletView bullet =
+drawEnemies : Model -> List Form
+drawEnemies model =
+    List.map drawEnemy model.enemies
+
+
+drawEnemy : Enemy -> Form
+drawEnemy enemy =
+    rect 12 12
+        |> filled (Color.rgb 0 0 0)
+        |> move enemy
+
+
+drawBullet : Bullet -> Form
+drawBullet bullet =
     rect 10 4
         |> filled (Color.rgb 0 0 0)
         |> move bullet
 
 
-bulletsView : Model -> List Form
-bulletsView model =
-    List.map bulletView model.bullets
+drawBullets : Model -> List Form
+drawBullets model =
+    List.map drawBullet model.bullets
 
 
-keyCodeToKey : Keyboard.KeyCode -> Key
-keyCodeToKey keyCode =
-    case keyCode of
-        38 ->
-            Up
 
-        40 ->
-            Down
-
-        37 ->
-            Left
-
-        39 ->
-            Right
-
-        32 ->
-            Space
-
-        _ ->
-            OtherKey
+-- UPDATE
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -290,7 +317,7 @@ tryShootBullet key ( model, msg ) =
         if model.weaponCooldown == 0 then
             let
                 bullets_ =
-                    model.coor :: model.bullets
+                    model.playerShip :: model.bullets
             in
                 ( { model | bullets = bullets_, weaponCooldown = weaponCooldownTime }, msg )
         else
@@ -309,6 +336,7 @@ updateAnimationFrame model diff =
         |> updateShipMovement diff
         |> updateBulletsMovement diff
         |> updateWeaponCooldown diff
+        |> updateNewEnemies diff
 
 
 updateShipMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
@@ -351,14 +379,14 @@ updateShipMovement diff ( model, msg ) =
             )
 
         newCoor =
-            model.coor
+            model.playerShip
                 |> plusUp
                 |> plusDown
                 |> plusLeft
                 |> plusRight
                 |> bound
     in
-        ( { model | coor = newCoor }, msg )
+        ( { model | playerShip = newCoor }, msg )
 
 
 updateBulletsMovement : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
@@ -387,6 +415,15 @@ updateWeaponCooldown diff ( model, msg ) =
                 |> max 0
     in
         ( { model | weaponCooldown = weaponCooldown_ }, msg )
+
+
+updateNewEnemies : Time.Time -> ( Model, Cmd msg ) -> ( Model, Cmd msg )
+updateNewEnemies diff ( model, msg ) =
+    if List.isEmpty model.enemies then
+        -- Spawn
+        ( { model | enemies = [ newEnemy ] }, msg )
+    else
+        ( model, msg )
 
 
 
