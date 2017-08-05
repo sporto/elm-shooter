@@ -9,6 +9,7 @@ import Element
 import Html exposing (..)
 import Html.Attributes exposing (width, height, style)
 import Keyboard
+import Maybe.Extra
 import Text
 import Time exposing (Time)
 
@@ -33,6 +34,12 @@ type Ship
     = Ship Point
 
 
+type alias Explosion =
+    { position : Point
+    , time : Time
+    }
+
+
 type alias Enemy =
     { createdTime : Time
     , position : Point
@@ -43,6 +50,7 @@ type alias Enemy =
 type alias Model =
     { bullets : List Bullet
     , enemies : List Enemy
+    , explosions : List Explosion
     , gameOver : Bool
     , playerShip : Ship
     , pressedKeys :
@@ -61,6 +69,7 @@ initialModel : Model
 initialModel =
     { bullets = []
     , enemies = []
+    , explosions = []
     , gameOver = False
     , playerShip = Ship ( 0, 0 )
     , pressedKeys =
@@ -630,22 +639,41 @@ updateEnemiesMovement diff ( model, msg ) =
 updateEnemiesCollision : Time -> Return -> Return
 updateEnemiesCollision diff ( model, msg ) =
     let
-        checkEnemy : Enemy -> Maybe Enemy
+        checkEnemy : Enemy -> ( Maybe Enemy, Maybe Explosion )
         checkEnemy enemy =
             if List.any (doesEnemyCollideWithBullet enemy) model.bullets then
-                Nothing
+                let
+                    explosion =
+                        { position = enemy.position
+                        , time = 0
+                        }
+                in
+                    ( Nothing, Just explosion )
             else
-                Just enemy
+                ( Just enemy, Nothing )
 
-        standingEnemies =
+        enemiesOrExplosions =
             model.enemies
-                |> List.filterMap checkEnemy
+                |> List.map checkEnemy
+
+        enemies_ : List Enemy
+        enemies_ =
+            enemiesOrExplosions
+                |> List.map Tuple.first
+                |> Maybe.Extra.values
+
+        explosions_ : List Explosion
+        explosions_ =
+            enemiesOrExplosions
+                |> List.map Tuple.second
+                |> Maybe.Extra.values
 
         score =
-            List.length model.enemies - List.length standingEnemies
+            List.length explosions_
     in
         ( { model
-            | enemies = standingEnemies
+            | enemies = enemies_
+            , explosions = explosions_
             , score = model.score + score
           }
         , msg
@@ -779,16 +807,16 @@ getEnemyBoundingBox enemy =
 getBulletBoundingBox (Bullet ( x, y )) =
     let
         left =
-            x - bulletWidth / 2
+            x - bulletWidth / 2 - 4
 
         right =
-            x + bulletWidth / 2
+            x + bulletWidth / 2 + 4
 
         top =
-            y - bulletHeight / 2
+            y - bulletHeight / 2 - 4
 
         bottom =
-            y + bulletHeight / 2
+            y + bulletHeight / 2 + 4
     in
         [ ( top, left )
         , ( top, right )

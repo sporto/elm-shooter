@@ -1,4 +1,5 @@
-- Move enemies in a path
-- Enemies shoot 
-- Nice graphics
-- Background    
+
+- Enemies can shoot 
+- Bullet should stop when hitting an enemy
+- Explosions
+- 
