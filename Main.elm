@@ -44,6 +44,16 @@ type alias Enemy =
     { createdTime : Time
     , position : Point
     , direction : Direction
+    , weaponCooldown : Float
+    }
+
+
+newEnemy : Time -> Enemy
+newEnemy time =
+    { createdTime = time
+    , direction = DirectionLeft
+    , position = ( rightBoundary, 0 )
+    , weaponCooldown = 1 * Time.second
     }
 
 
@@ -113,14 +123,6 @@ keyCodeToKey keyCode =
 
         _ ->
             OtherKey
-
-
-newEnemy : Time -> Enemy
-newEnemy time =
-    { createdTime = time
-    , direction = DirectionLeft
-    , position = ( rightBoundary, 0 )
-    }
 
 
 type alias Return =
@@ -513,15 +515,14 @@ updateAnimationFrame : Model -> Time -> Return
 updateAnimationFrame model diff =
     ( model, Cmd.none )
         |> updateStage diff
-        -- Movements
-        |> updateShipMovement diff
-        |> updateBulletsMovement diff
-        |> updateEnemiesMovement diff
         -- Collisions
         |> updateEnemiesCollision diff
         |> updateShipCollision diff
+        -- Actions
+        |> updateShip diff
+        |> updateEnemies diff
+        |> updateBulletsMovement diff
         -- Other
-        |> updateWeaponCooldown diff
         |> updateNewEnemies diff
         |> updateExplotions diff
 
@@ -535,12 +536,9 @@ updateStage diff ( model, msg ) =
         ( { model | time = scrollX_ }, msg )
 
 
-updateShipMovement : Time -> Return -> Return
-updateShipMovement diff ( model, msg ) =
+updateShipMovement : Model -> Time -> Ship -> Ship
+updateShipMovement model diff (Ship playerShipPoint) =
     let
-        (Ship playerShipPoint) =
-            model.playerShip
-
         movement =
             shipMovementForDiff diff
 
@@ -585,7 +583,26 @@ updateShipMovement diff ( model, msg ) =
                 |> plusRight
                 |> bound
     in
-        ( { model | playerShip = Ship newCoor }, msg )
+        Ship newCoor
+
+
+updateShip : Time -> Return -> Return
+updateShip diff ( model, msg ) =
+    let
+        ship_ =
+            updateShipMovement model diff model.playerShip
+
+        weaponCooldown_ =
+            model.weaponCooldown
+                |> (\current -> current - weaponCooldownForDiff diff)
+                |> max 0
+    in
+        ( { model
+            | playerShip = ship_
+            , weaponCooldown = weaponCooldown_
+          }
+        , msg
+        )
 
 
 updateBulletsMovement : Time -> Return -> Return
@@ -606,17 +623,6 @@ updateBulletsMovement diff ( model, msg ) =
                 |> List.filter isBulletInStage
     in
         ( { model | friendlyBullets = movedBullets }, msg )
-
-
-updateWeaponCooldown : Time -> Return -> Return
-updateWeaponCooldown diff ( model, msg ) =
-    let
-        weaponCooldown_ =
-            model.weaponCooldown
-                |> (\current -> current - weaponCooldownForDiff diff)
-                |> max 0
-    in
-        ( { model | weaponCooldown = weaponCooldown_ }, msg )
 
 
 updateEnemyPosition : Time -> Time -> Enemy -> Enemy
@@ -658,12 +664,18 @@ updateEnemyPosition totalTime diff enemy =
         { enemy | position = position_, direction = direction_ }
 
 
-updateEnemiesMovement : Time -> Return -> Return
-updateEnemiesMovement diff ( model, msg ) =
+updateEnemies : Time -> Return -> Return
+updateEnemies diff ( model, msg ) =
     let
+        updateWeaponCooldown : Enemy -> Enemy
+        updateWeaponCooldown enemy =
+            { enemy | weaponCooldown = enemy.weaponCooldown - diff }
+
         enemies_ : List Enemy
         enemies_ =
-            List.map (updateEnemyPosition model.time diff) model.enemies
+            model.enemies
+                |> List.map (updateEnemyPosition model.time diff)
+                |> List.map updateWeaponCooldown
     in
         ( { model | enemies = enemies_ }, msg )
 
