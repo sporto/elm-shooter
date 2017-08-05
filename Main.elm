@@ -219,6 +219,7 @@ drawActors model =
         , drawEnemies model
         , drawBullets model
         , drawScore model
+        , drawGameOver model
         ]
 
 
@@ -283,6 +284,20 @@ drawScore model =
     in
         [ form
         ]
+
+
+drawGameOver : Model -> List Form
+drawGameOver model =
+    let
+        form =
+            "Game Over"
+                |> Text.fromString
+                |> Collage.text
+    in
+        if model.gameOver then
+            [ form ]
+        else
+            []
 
 
 enemyWidth =
