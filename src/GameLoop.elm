@@ -16,6 +16,7 @@ updateAnimationFrame model diff =
         -- Collisions
         |> updateEnemiesCollision diff
         |> updateShipCollision diff
+        |> updateShipPowerUpCollision diff
         -- Actions
         |> updatePowerUp diff
         |> updateShip diff
@@ -437,6 +438,28 @@ updateShipCollision diff ( model, cmd ) =
               }
             , cmd_
             )
+
+
+updateShipPowerUpCollision : Time -> Return Msg -> Return Msg
+updateShipPowerUpCollision diff ( model, cmd ) =
+    case model.powerUp of
+        Nothing ->
+            ( model, cmd )
+
+        Just pu ->
+            let
+                collision =
+                    Utils.doesShipCollideWithPowerUp model.playerShip pu
+            in
+                if collision then
+                    ( { model
+                        | powerUp = Nothing
+                        , level = model.level + 1
+                      }
+                    , cmd
+                    )
+                else
+                    ( model, cmd )
 
 
 updateNewEnemies : Time -> Return Msg -> Return Msg

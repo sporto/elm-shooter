@@ -113,6 +113,34 @@ getBulletBoundingBox (Bullet ( x, y )) =
         ]
 
 
+getPowerUpBoundingBox : PowerUp -> List Point
+getPowerUpBoundingBox powerUp =
+    let
+        ( x, y ) =
+            powerUp.position
+
+        ( _, w, h ) =
+            powerUpAsset
+
+        left =
+            x - w / 2 - 4
+
+        right =
+            x + w / 2 + 4
+
+        top =
+            y - h / 2 - 4
+
+        bottom =
+            y + h / 2 + 4
+    in
+        [ ( top, left )
+        , ( top, right )
+        , ( bottom, right )
+        , ( bottom, left )
+        ]
+
+
 doesEnemyCollideWithBullet : Enemy -> Bullet -> Bool
 doesEnemyCollideWithBullet enemy bullet =
     let
@@ -149,6 +177,19 @@ doesShipCollideWithEnemyBullet ship bullet =
             getShipBoundingBox ship
     in
         Collision.collision 2 ( bulletPolly, polySupport ) ( shipPolly, polySupport )
+            |> Maybe.withDefault False
+
+
+doesShipCollideWithPowerUp : Ship -> PowerUp -> Bool
+doesShipCollideWithPowerUp ship pu =
+    let
+        powerUpPolly =
+            getPowerUpBoundingBox pu
+
+        shipPolly =
+            getShipBoundingBox ship
+    in
+        Collision.collision 2 ( powerUpPolly, polySupport ) ( shipPolly, polySupport )
             |> Maybe.withDefault False
 
 

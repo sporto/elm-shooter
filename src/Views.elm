@@ -105,7 +105,7 @@ drawPowerUps model =
         Just pu ->
             let
                 ( file, w, h ) =
-                    powerUp
+                    powerUpAsset
 
                 form =
                     Element.image w h file

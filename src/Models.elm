@@ -118,7 +118,7 @@ smallExplosion =
     ( "assets/explosion.png", explosionWidth, explosionHeight )
 
 
-powerUp =
+powerUpAsset =
     ( "assets/power-up.png", 24, 24 )
 
 
