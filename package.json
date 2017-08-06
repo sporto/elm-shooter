@@ -7,6 +7,6 @@
   "license": "MIT",
   "scripts": {
     "start": "elm-app start",
-    "build"; "elm-app build"
+    "build": "elm-app build"
   }
 }

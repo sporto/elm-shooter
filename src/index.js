@@ -7,5 +7,5 @@ var root = document.getElementById('root');
 var app = Elm.Main.embed(root);
 
 app.ports.playSound.subscribe(function (soundName) {
-	if (soundName) new Audio("assets/" + soundName).play();
+	if (soundName) new Audio("public/" + soundName).play();
 });

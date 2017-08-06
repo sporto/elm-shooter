@@ -85,17 +85,17 @@ drawBg model image distance =
 
 drawBgFar : Model -> List Form
 drawBgFar model =
-    drawBg model "assets/bg-clouds.png" 40
+    drawBg model (publicUrl ++ "/bg-clouds.png") 40
 
 
 drawBgMedium : Model -> List Form
 drawBgMedium model =
-    drawBg model "assets/bg-hills.png" 10
+    drawBg model (publicUrl ++ "/bg-hills.png") 10
 
 
 drawBgNear : Model -> List Form
 drawBgNear model =
-    drawBg model "assets/bg-cars.png" 5
+    drawBg model (publicUrl ++ "/bg-cars.png") 5
 
 
 drawPowerUps : Model -> List Form
@@ -124,7 +124,7 @@ drawShip model =
             model.playerShip
 
         file =
-            "assets/ship.png"
+            publicUrl ++ "/ship.png"
 
         ( eFile, ew, eh ) =
             bigExplosion
@@ -179,7 +179,7 @@ drawEnemy : Enemy -> Form
 drawEnemy enemy =
     let
         file =
-            "assets/enemy-1.png"
+            publicUrl ++ "/enemy-1.png"
     in
         Element.image enemyWidth enemyHeight file
             |> toForm
@@ -195,7 +195,7 @@ drawExplosion : Explosion -> Form
 drawExplosion explosion =
     let
         file =
-            "assets/explosion.png"
+            publicUrl ++ "/explosion.png"
     in
         Element.image explosionWidth explosionHeight file
             |> toForm

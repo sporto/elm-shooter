@@ -7,6 +7,11 @@ type alias Asset =
     ( String, Int, Int )
 
 
+publicUrl =
+    "public"
+    --"%PUBLIC_URL%"
+
+
 stageHeight : Float
 stageHeight =
     400
@@ -138,17 +143,17 @@ explosionHeight =
 
 bigExplosion : Asset
 bigExplosion =
-    ( "assets/explosion-big.png", 32, 32 )
+    ( publicUrl ++ "/explosion-big.png", 32, 32 )
 
 
 smallExplosion : Asset
 smallExplosion =
-    ( "assets/explosion.png", explosionWidth, explosionHeight )
+    ( publicUrl ++ "/explosion.png", explosionWidth, explosionHeight )
 
 
 powerUpAsset : Asset
 powerUpAsset =
-    ( "assets/power-up.png", 24, 24 )
+    ( publicUrl ++ "/power-up.png", 24, 24 )
 
 
 respawnTime : Float
