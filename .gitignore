@@ -3,3 +3,4 @@ elm-stuff
 dist
 yarn-error.log
 node_modules
+.envrc

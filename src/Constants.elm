@@ -8,8 +8,7 @@ type alias Asset =
 
 
 publicUrl =
-    "public"
-    --"%PUBLIC_URL%"
+    "%PUBLIC_URL%"
 
 
 stageHeight : Float
