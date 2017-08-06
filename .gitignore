@@ -4,3 +4,6 @@ dist
 yarn-error.log
 node_modules
 .envrc
+
+# elm-repl generated files
+repl-temp-*
