@@ -158,7 +158,17 @@ respawnTime =
 
 powerUpFrequency : Float
 powerUpFrequency =
-    Time.second * 10
+    Time.second * 30
+
+
+initialPowerUpDelay : Time
+initialPowerUpDelay =
+    10 * Time.second
+
+
+maxLevel : Int
+maxLevel =
+    3
 
 
 

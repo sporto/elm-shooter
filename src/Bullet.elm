@@ -4,6 +4,14 @@ import Models exposing (..)
 import Time exposing (Time)
 
 
+new : Point -> Direction -> Float -> Bullet
+new position direction speed =
+    { position = position
+    , direction = direction
+    , speed = speed
+    }
+
+
 move : Time -> Bullet -> Bullet
 move diff bullet =
     let

@@ -44,13 +44,19 @@ updatePowerUp diff ( model, cmd ) =
     case model.powerUp of
         Nothing ->
             let
+                nextPowerUpTime =
+                    (toFloat model.powerUpCount) * powerUpFrequency + initialPowerUpDelay
+
                 shouldSpawn =
-                    model.time > (toFloat model.powerUpCount) * powerUpFrequency
+                    model.time
+                        > nextPowerUpTime
+                        && model.level
+                        < maxLevel
             in
                 if shouldSpawn then
                     let
                         powerUp =
-                            { position = ( rightBoundary, 0 )
+                            { position = ( rightBoundary, 32 )
                             }
                     in
                         ( { model

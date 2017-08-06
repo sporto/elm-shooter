@@ -1,9 +1,11 @@
 module UserEvents exposing (..)
 
 import Audio
+import Bullet
 import Keyboard
 import Models exposing (..)
 import Msgs exposing (..)
+import Position
 import Utils
 
 
@@ -80,14 +82,40 @@ tryShootBullet key ( model, msg ) =
                 (Ship shipPoint) =
                     model.playerShip
 
-                newBullet =
-                    { position = shipPoint
-                    , direction = DirectionRight
-                    , speed = friendlyBulletSpeed
-                    }
+                plainBullet =
+                    [ Bullet.new shipPoint DirectionRight friendlyBulletSpeed ]
+
+                doubleBullet =
+                    [ Bullet.new (Position.moveY -8 shipPoint) DirectionRight friendlyBulletSpeed
+                    , Bullet.new (Position.moveY 8 shipPoint) DirectionRight friendlyBulletSpeed
+                    ]
+
+                tripleBullet =
+                    [ Bullet.new (Position.moveY -16 shipPoint) DirectionRight friendlyBulletSpeed
+                    , Bullet.new shipPoint DirectionRight friendlyBulletSpeed
+                    , Bullet.new (Position.moveY 16 shipPoint) DirectionRight friendlyBulletSpeed
+                    ]
+
+                backwardBullet =
+                    [ Bullet.new shipPoint DirectionLeft (friendlyBulletSpeed / 4) ]
+
+                newBullets : List Bullet
+                newBullets =
+                    case model.level of
+                        0 ->
+                            plainBullet
+
+                        1 ->
+                            doubleBullet
+
+                        2 ->
+                            doubleBullet ++ backwardBullet
+
+                        _ ->
+                            tripleBullet ++ backwardBullet
 
                 friendlyBullets_ =
-                    newBullet :: model.friendlyBullets
+                    newBullets ++ model.friendlyBullets
             in
                 ( { model | friendlyBullets = friendlyBullets_, weaponCooldown = weaponCooldownTime }
                 , Audio.playLaser
