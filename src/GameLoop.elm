@@ -2,6 +2,7 @@ module GameLoop exposing (..)
 
 import Audio
 import Bullet
+import Constants exposing (..)
 import List.Extra
 import Maybe.Extra
 import Models exposing (..)

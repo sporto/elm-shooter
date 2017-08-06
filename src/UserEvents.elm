@@ -2,6 +2,7 @@ module UserEvents exposing (..)
 
 import Audio
 import Bullet
+import Constants exposing (..)
 import Keyboard
 import Models exposing (..)
 import Msgs exposing (..)

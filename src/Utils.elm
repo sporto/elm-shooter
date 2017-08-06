@@ -1,6 +1,7 @@
 module Utils exposing (..)
 
 import Collision
+import Constants exposing (..)
 import Models exposing (..)
 import Time exposing (Time)
 

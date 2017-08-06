@@ -2,6 +2,7 @@ module Views exposing (..)
 
 import Collage exposing (..)
 import Color
+import Constants exposing (..)
 import Element
 import Html exposing (..)
 import Html.Attributes exposing (style)
