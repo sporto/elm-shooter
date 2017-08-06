@@ -6,6 +6,7 @@
   "author": "Sebastian Porto <s@porto5.com>",
   "license": "MIT",
   "scripts": {
-    "start": "elm-app start"
+    "start": "elm-app start",
+    "build"; "elm-app build"
   }
 }
