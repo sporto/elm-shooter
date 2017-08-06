@@ -1,6 +1,7 @@
 module GameLoop exposing (..)
 
 import Audio
+import Bullet
 import List.Extra
 import Maybe.Extra
 import Models exposing (..)
@@ -155,16 +156,10 @@ updateFriendlyBullets diff ( model, cmd ) =
         movement =
             bulletMovementForDiff diff
 
-        moveBullet (Bullet ( x, y )) =
-            Bullet ( x + movement, y )
-
-        isBulletInStage (Bullet ( x, y )) =
-            x < rightBoundary
-
         movedBullets =
             model.friendlyBullets
-                |> List.map moveBullet
-                |> List.filter isBulletInStage
+                |> List.map (Bullet.move movement)
+                |> List.filter Bullet.isInStage
     in
         ( { model | friendlyBullets = movedBullets }, cmd )
 
@@ -175,7 +170,7 @@ updateEnemyBullets diff ( model, cmd ) =
         movement =
             enemyBulletMovementForDiff diff
 
-        moveBullet : EnemyBullet -> EnemyBullet
+        moveBullet : Bullet -> Bullet
         moveBullet bullet =
             let
                 ( x, y ) =
@@ -192,19 +187,11 @@ updateEnemyBullets diff ( model, cmd ) =
             in
                 { bullet | position = position_ }
 
-        inStage : EnemyBullet -> Bool
-        inStage { position } =
-            let
-                ( x, y ) =
-                    position
-            in
-                x > leftBoundary && x < rightBoundary
-
-        enemyBullets_ : List EnemyBullet
+        enemyBullets_ : List Bullet
         enemyBullets_ =
             model.enemyBullets
                 |> List.map moveBullet
-                |> List.filter inStage
+                |> List.filter Bullet.isInStage
     in
         ( { model | enemyBullets = enemyBullets_ }, cmd )
 
@@ -267,7 +254,7 @@ updateEnemiesMovementAndCooldown diff ( model, cmd ) =
 updateEnemiesShots : Time -> Return Msg -> Return Msg
 updateEnemiesShots diff ( model, cmd ) =
     let
-        attemptShot : Enemy -> ( Enemy, Maybe EnemyBullet )
+        attemptShot : Enemy -> ( Enemy, Maybe Bullet )
         attemptShot enemy =
             if enemy.weaponCooldown <= 0 then
                 ( { enemy | weaponCooldown = enemyWeaponCooldownTime }
@@ -283,11 +270,11 @@ updateEnemiesShots diff ( model, cmd ) =
             model.enemies
                 |> List.map attemptShot
 
-        newBullets : List EnemyBullet
+        newBullets : List Bullet
         newBullets =
             List.filterMap Tuple.second updates
 
-        enemyBullets_ : List EnemyBullet
+        enemyBullets_ : List Bullet
         enemyBullets_ =
             newBullets ++ model.enemyBullets
 

@@ -24,16 +24,16 @@ getShipBoundingBox : Ship -> List Point
 getShipBoundingBox (Ship ( x, y )) =
     let
         left =
-            x - shipWidth / 2
+            x - (toFloat shipWidth) / 2
 
         right =
-            x + shipWidth / 2
+            x + (toFloat shipWidth) / 2
 
         top =
-            y - shipHeight / 2
+            y - (toFloat shipHeight) / 2
 
         bottom =
-            y + shipHeight / 2
+            y + (toFloat shipHeight) / 2
     in
         [ ( top, left )
         , ( top, right )
@@ -49,16 +49,16 @@ getEnemyBoundingBox enemy =
             enemy.position
 
         left =
-            x - enemyWidth / 2
+            x - (toFloat enemyWidth) / 2
 
         right =
-            x + enemyWidth / 2
+            x + (toFloat enemyWidth) / 2
 
         top =
-            y - enemyHeight / 2
+            y - (toFloat enemyHeight) / 2
 
         bottom =
-            y + enemyHeight / 2
+            y + (toFloat enemyHeight) / 2
     in
         [ ( top, left )
         , ( top, right )
@@ -67,23 +67,23 @@ getEnemyBoundingBox enemy =
         ]
 
 
-getEnemyBulletBoundingBox : EnemyBullet -> List Point
+getEnemyBulletBoundingBox : Bullet -> List Point
 getEnemyBulletBoundingBox bullet =
     let
         ( x, y ) =
             bullet.position
 
         left =
-            x - enemyBulletWidth / 2
+            x - (toFloat enemyBulletWidth) / 2
 
         right =
-            x + enemyBulletWidth / 2
+            x + (toFloat enemyBulletWidth) / 2
 
         top =
-            y - enemyBulletHeight / 2
+            y - (toFloat enemyBulletHeight) / 2
 
         bottom =
-            y + enemyBulletHeight / 2
+            y + (toFloat enemyBulletHeight) / 2
     in
         [ ( top, left )
         , ( top, right )
@@ -92,19 +92,23 @@ getEnemyBulletBoundingBox bullet =
         ]
 
 
-getBulletBoundingBox (Bullet ( x, y )) =
+getFriendlyBulletBoundingBox : Bullet -> List Point
+getFriendlyBulletBoundingBox bullet =
     let
+        ( x, y ) =
+            bullet.position
+
         left =
-            x - bulletWidth / 2 - 4
+            x - (toFloat bulletWidth) / 2 - 4
 
         right =
-            x + bulletWidth / 2 + 4
+            x + (toFloat bulletWidth) / 2 + 4
 
         top =
-            y - bulletHeight / 2 - 4
+            y - (toFloat bulletHeight) / 2 - 4
 
         bottom =
-            y + bulletHeight / 2 + 4
+            y + (toFloat bulletHeight) / 2 + 4
     in
         [ ( top, left )
         , ( top, right )
@@ -123,16 +127,16 @@ getPowerUpBoundingBox powerUp =
             powerUpAsset
 
         left =
-            x - w / 2 - 4
+            x - (toFloat w) / 2 - 4
 
         right =
-            x + w / 2 + 4
+            x + (toFloat w) / 2 + 4
 
         top =
-            y - h / 2 - 4
+            y - (toFloat h) / 2 - 4
 
         bottom =
-            y + h / 2 + 4
+            y + (toFloat h) / 2 + 4
     in
         [ ( top, left )
         , ( top, right )
@@ -148,7 +152,7 @@ doesEnemyCollideWithBullet enemy bullet =
             getEnemyBoundingBox enemy
 
         bulletPolly =
-            getBulletBoundingBox bullet
+            getFriendlyBulletBoundingBox bullet
     in
         Collision.collision 2 ( enemyPolly, polySupport ) ( bulletPolly, polySupport )
             |> Maybe.withDefault False
@@ -167,7 +171,7 @@ doesShipCollideWithEnemy ship enemy =
             |> Maybe.withDefault False
 
 
-doesShipCollideWithEnemyBullet : Ship -> EnemyBullet -> Bool
+doesShipCollideWithEnemyBullet : Ship -> Bullet -> Bool
 doesShipCollideWithEnemyBullet ship bullet =
     let
         bulletPolly =

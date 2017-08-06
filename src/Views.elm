@@ -42,7 +42,7 @@ drawActors model =
         , drawPowerUps model
         , drawShip model
         , drawEnemies model
-        , drawBullets model
+        , drawFriendlyBullets model
         , drawEnemyBullets model
         , drawExplosions model
 
@@ -268,21 +268,21 @@ drawGameOver model =
             []
 
 
-drawBullet : Bullet -> Form
-drawBullet (Bullet point) =
-    rect bulletWidth bulletHeight
+drawFriendlyBullet : Bullet -> Form
+drawFriendlyBullet bullet =
+    rect (toFloat bulletWidth) (toFloat bulletHeight)
         |> filled (Color.rgb 0 150 150)
-        |> move point
+        |> move bullet.position
 
 
-drawBullets : Model -> List Form
-drawBullets model =
-    List.map drawBullet model.friendlyBullets
+drawFriendlyBullets : Model -> List Form
+drawFriendlyBullets model =
+    List.map drawFriendlyBullet model.friendlyBullets
 
 
-drawEnemyBullet : EnemyBullet -> Form
+drawEnemyBullet : Bullet -> Form
 drawEnemyBullet bullet =
-    rect enemyBulletWidth enemyBulletHeight
+    rect (toFloat enemyBulletWidth) (toFloat enemyBulletHeight)
         |> filled (Color.rgb 255 100 0)
         |> move bullet.position
 

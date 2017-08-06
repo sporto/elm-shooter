@@ -80,8 +80,13 @@ tryShootBullet key ( model, msg ) =
                 (Ship shipPoint) =
                     model.playerShip
 
+                newBullet =
+                    { position = shipPoint
+                    , direction = DirectionRight
+                    }
+
                 friendlyBullets_ =
-                    (Bullet shipPoint) :: model.friendlyBullets
+                    newBullet :: model.friendlyBullets
             in
                 ( { model | friendlyBullets = friendlyBullets_, weaponCooldown = weaponCooldownTime }
                 , Audio.playLaser
