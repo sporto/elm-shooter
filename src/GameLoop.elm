@@ -7,6 +7,7 @@ import List.Extra
 import Maybe.Extra
 import Models exposing (..)
 import Msgs exposing (..)
+import Position
 import Time exposing (Time)
 import Utils
 
@@ -49,10 +50,8 @@ updatePowerUp diff ( model, cmd ) =
                     (toFloat model.powerUpCount) * powerUpFrequency + initialPowerUpDelay
 
                 shouldSpawn =
-                    model.time
-                        > nextPowerUpTime
-                        && model.level
-                        < maxLevel
+                    (model.time > nextPowerUpTime)
+                        && (model.level < maxLevel)
             in
                 if shouldSpawn then
                     let
@@ -79,7 +78,10 @@ updatePowerUp diff ( model, cmd ) =
                     ( x - powerUpMovementForDiff diff, y )
 
                 powerUp_ =
-                    Just { pu | position = position_ }
+                    if Position.isInStage pu.position then
+                        Just { pu | position = position_ }
+                    else
+                        Nothing
             in
                 ( { model | powerUp = powerUp_ }, cmd )
 

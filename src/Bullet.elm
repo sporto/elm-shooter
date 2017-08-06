@@ -2,6 +2,7 @@ module Bullet exposing (..)
 
 import Constants exposing (..)
 import Models exposing (..)
+import Position
 import Time exposing (Time)
 
 
@@ -41,9 +42,4 @@ move diff bullet =
 
 isInStage : Bullet -> Bool
 isInStage bullet =
-    let
-        ( x, y ) =
-            bullet.position
-    in
-        (x > leftBoundary)
-            && (x < rightBoundary)
+    Position.isInStage bullet.position
