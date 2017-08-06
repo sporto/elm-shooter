@@ -8,7 +8,9 @@ import Html.Attributes exposing (style)
 import Models exposing (..)
 import Text
 import Time exposing (Time)
-import Transform
+
+
+--import Transform
 
 
 view : Model -> Html msg
@@ -37,6 +39,7 @@ drawActors model =
         , drawBgNear model
 
         -- Ships
+        , drawPowerUps model
         , drawShip model
         , drawEnemies model
         , drawBullets model
@@ -91,6 +94,25 @@ drawBgMedium model =
 drawBgNear : Model -> List Form
 drawBgNear model =
     drawBg model "assets/bg-cars.png" 5
+
+
+drawPowerUps : Model -> List Form
+drawPowerUps model =
+    case model.powerUp of
+        Nothing ->
+            []
+
+        Just pu ->
+            let
+                ( file, w, h ) =
+                    powerUp
+
+                form =
+                    Element.image w h file
+                        |> toForm
+                        |> move pu.position
+            in
+                [ form ]
 
 
 drawShip : Model -> List Form

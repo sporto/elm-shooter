@@ -17,6 +17,7 @@ updateAnimationFrame model diff =
         |> updateEnemiesCollision diff
         |> updateShipCollision diff
         -- Actions
+        |> updatePowerUp diff
         |> updateShip diff
         |> updateEnemiesMovementAndCooldown diff
         |> updateEnemiesShots diff
@@ -34,6 +35,44 @@ updateStage diff ( model, cmd ) =
             model.time + diff
     in
         ( { model | time = scrollX_ }, cmd )
+
+
+updatePowerUp : Time -> Return Msg -> Return Msg
+updatePowerUp diff ( model, cmd ) =
+    case model.powerUp of
+        Nothing ->
+            let
+                shouldSpawn =
+                    model.time > (toFloat model.powerUpCount) * powerUpFrequency
+            in
+                if shouldSpawn then
+                    let
+                        powerUp =
+                            { position = ( rightBoundary, 0 )
+                            }
+                    in
+                        ( { model
+                            | powerUp = Just powerUp
+                            , powerUpCount = model.powerUpCount + 1
+                          }
+                        , cmd
+                        )
+                else
+                    ( model, cmd )
+
+        Just pu ->
+            -- Move the current power up
+            let
+                ( x, y ) =
+                    pu.position
+
+                position_ =
+                    ( x - powerUpMovementForDiff diff, y )
+
+                powerUp_ =
+                    Just { pu | position = position_ }
+            in
+                ( { model | powerUp = powerUp_ }, cmd )
 
 
 updateShipMovement : Model -> Time -> Ship -> Ship

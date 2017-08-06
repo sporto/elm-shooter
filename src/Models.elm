@@ -61,6 +61,10 @@ weaponCooldownForDiff diff =
     diff
 
 
+powerUpMovementForDiff diff =
+    diff / 25
+
+
 bgMovementForDiff : Float -> Float -> Float
 bgMovementForDiff time distance =
     time * -1 / distance
@@ -114,8 +118,16 @@ smallExplosion =
     ( "assets/explosion.png", explosionWidth, explosionHeight )
 
 
+powerUp =
+    ( "assets/power-up.png", 24, 24 )
+
+
 respawnTime =
     2 * Time.second
+
+
+powerUpFrequency =
+    Time.second * 10
 
 
 
@@ -159,6 +171,11 @@ type alias Enemy =
     }
 
 
+type alias PowerUp =
+    { position : Point
+    }
+
+
 newEnemy : Time -> Enemy
 newEnemy time =
     { createdTime = time
@@ -174,6 +191,7 @@ type alias Model =
     , explosions : List Explosion
     , friendlyBullets : List Bullet
     , lifes : Int
+    , level : Int
     , playerShip : Ship
     , pressedKeys :
         { up : Bool
@@ -181,6 +199,8 @@ type alias Model =
         , left : Bool
         , right : Bool
         }
+    , powerUp : Maybe PowerUp
+    , powerUpCount : Int
     , respawnIn : Time
     , score : Int
     , time : Float
@@ -194,6 +214,7 @@ initialModel =
     , enemyBullets = []
     , explosions = []
     , friendlyBullets = []
+    , level = 0
     , lifes = 3
     , playerShip = Ship ( 0, 0 )
     , pressedKeys =
@@ -202,6 +223,8 @@ initialModel =
         , left = False
         , right = False
         }
+    , powerUp = Nothing
+    , powerUpCount = 0
     , respawnIn = 0
     , score = 0
     , time = 0
