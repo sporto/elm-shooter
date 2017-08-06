@@ -240,18 +240,31 @@ updateEnemiesMovementAndCooldown diff ( model, cmd ) =
 updateEnemiesShots : Time -> Return Msg -> Return Msg
 updateEnemiesShots diff ( model, cmd ) =
     let
+        getShipY (Ship (_, y)) =
+            y
+
+        shipY =
+            getShipY model.playerShip
+
         attemptShot : Enemy -> ( Enemy, Maybe Bullet )
         attemptShot enemy =
-            if enemy.weaponCooldown <= 0 then
-                ( { enemy | weaponCooldown = enemyWeaponCooldownTime }
-                , Just
-                    { position = enemy.position
-                    , direction = enemy.direction
-                    , speed = enemyBulletSpeed
-                    }
-                )
-            else
-                ( enemy, Nothing )
+            let
+                (_, y ) =
+                    enemy.position
+
+                shipIsInRange  =
+                    y > (shipY - 12 ) && y < (shipY + 12)
+            in   
+                if enemy.weaponCooldown <= 0 && shipIsInRange then
+                    ( { enemy | weaponCooldown = enemyWeaponCooldownTime }
+                    , Just
+                        { position = enemy.position
+                        , direction = enemy.direction
+                        , speed = enemyBulletSpeed
+                        }
+                    )
+                else
+                    ( enemy, Nothing )
 
         updates =
             model.enemies
