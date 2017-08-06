@@ -1,1 +1,2 @@
 export ELM_DEBUGGER=false
+export PUBLIC_URL=elm-shooter
