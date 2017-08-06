@@ -48,6 +48,7 @@ drawActors model =
 
         -- UI
         , drawScore model
+        , drawLevel model
         , drawLifes model
         , drawGameOver model
         ]
@@ -219,6 +220,21 @@ drawScore model =
     in
         [ form
         ]
+
+
+drawLevel : Model -> List Form
+drawLevel model =
+    let
+        level =
+            model.level |> toString
+    in
+        "Level: "
+            ++ level
+            |> Text.fromString
+            |> Text.color Color.darkGrey
+            |> Collage.text
+            |> move ( leftBoundary + 120, bottomBoundary - 20 )
+            |> List.singleton
 
 
 drawLifes : Model -> List Form
