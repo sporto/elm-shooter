@@ -1,11 +1,15 @@
 module Bullet exposing (..)
 
 import Models exposing (..)
+import Time exposing (Time)
 
 
-move : Float -> Bullet -> Bullet
-move movement bullet =
+move : Time -> Bullet -> Bullet
+move diff bullet =
     let
+        movement =
+            movementForDiff bullet.speed diff
+
         ( x, y ) =
             bullet.position
 

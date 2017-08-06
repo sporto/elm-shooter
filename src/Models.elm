@@ -52,14 +52,23 @@ shipMovementForDiff diff =
     diff / 2
 
 
-bulletMovementForDiff : Time -> Float
-bulletMovementForDiff diff =
-    diff
+
+-- 1 is Ship speed
 
 
-enemyBulletMovementForDiff : Time -> Float
-enemyBulletMovementForDiff diff =
-    diff / 6
+movementForDiff : Float -> Time -> Float
+movementForDiff speed diff =
+    diff * speed / 4
+
+
+friendlyBulletSpeed : Float
+friendlyBulletSpeed =
+    3
+
+
+enemyBulletSpeed : Float
+enemyBulletSpeed =
+    0.5
 
 
 weaponCooldownForDiff : Time -> Float
@@ -174,6 +183,7 @@ type alias Point =
 type alias Bullet =
     { position : Point
     , direction : Direction
+    , speed : Float
     }
 
 

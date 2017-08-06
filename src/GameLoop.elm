@@ -153,12 +153,9 @@ updateShip diff ( model, cmd ) =
 updateFriendlyBullets : Time -> Return Msg -> Return Msg
 updateFriendlyBullets diff ( model, cmd ) =
     let
-        movement =
-            bulletMovementForDiff diff
-
         movedBullets =
             model.friendlyBullets
-                |> List.map (Bullet.move movement)
+                |> List.map (Bullet.move diff)
                 |> List.filter Bullet.isInStage
     in
         ( { model | friendlyBullets = movedBullets }, cmd )
@@ -167,30 +164,10 @@ updateFriendlyBullets diff ( model, cmd ) =
 updateEnemyBullets : Time -> Return Msg -> Return Msg
 updateEnemyBullets diff ( model, cmd ) =
     let
-        movement =
-            enemyBulletMovementForDiff diff
-
-        moveBullet : Bullet -> Bullet
-        moveBullet bullet =
-            let
-                ( x, y ) =
-                    bullet.position
-
-                x_ =
-                    if bullet.direction == DirectionLeft then
-                        x - movement
-                    else
-                        x + movement
-
-                position_ =
-                    ( x_, y )
-            in
-                { bullet | position = position_ }
-
         enemyBullets_ : List Bullet
         enemyBullets_ =
             model.enemyBullets
-                |> List.map moveBullet
+                |> List.map (Bullet.move diff)
                 |> List.filter Bullet.isInStage
     in
         ( { model | enemyBullets = enemyBullets_ }, cmd )
@@ -261,6 +238,7 @@ updateEnemiesShots diff ( model, cmd ) =
                 , Just
                     { position = enemy.position
                     , direction = enemy.direction
+                    , speed = enemyBulletSpeed
                     }
                 )
             else

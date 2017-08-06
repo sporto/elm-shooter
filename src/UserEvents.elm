@@ -83,6 +83,7 @@ tryShootBullet key ( model, msg ) =
                 newBullet =
                     { position = shipPoint
                     , direction = DirectionRight
+                    , speed = friendlyBulletSpeed
                     }
 
                 friendlyBullets_ =
